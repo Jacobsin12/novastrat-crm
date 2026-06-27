@@ -1,0 +1,335 @@
+.diag-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(11, 19, 32, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeInOverlay 0.3s ease forwards;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.diag-modal.liquid-glass-modal {
+  width: 100%;
+  max-width: 600px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 1.5rem;
+  padding: 3rem 2.5rem;
+  position: relative;
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.1), 
+    inset 0 1px 0 rgba(255,255,255,0.9);
+  color: var(--color-black);
+}
+
+.diag-close-btn {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: rgba(0,0,0,0.05);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(0,0,0,0.4);
+  z-index: 10;
+}
+
+.diag-close-btn:hover {
+  background: rgba(0,0,0,0.1);
+  color: var(--color-black);
+  transform: rotate(90deg);
+}
+
+.fade-in {
+  animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Progress bar */
+.diag-progress-bar {
+  height: 4px;
+  background: rgba(0,0,0,0.06);
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.diag-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-gold), #e8c65f);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 4px;
+}
+
+.diag-step-indicator {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(0,0,0,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+}
+
+.diag-question-text {
+  font-size: 1.8rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  margin-bottom: 2rem;
+  color: var(--color-black);
+}
+
+.diag-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.diag-option-btn {
+  background: rgba(255,255,255,0.6);
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+}
+
+.diag-option-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.04);
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: rgba(0,0,0,0.4);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.diag-option-btn:hover {
+  background: rgba(255,255,255,1);
+  border-color: rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,1);
+  color: var(--color-black);
+}
+
+.diag-option-btn:hover .diag-option-letter {
+  background: var(--color-gold);
+  color: var(--color-black);
+}
+
+/* Lead View */
+.diag-lead-view {
+  text-align: center;
+}
+
+.diag-lead-view h3 {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.04em;
+  color: var(--color-black);
+}
+
+.diag-lead-view p {
+  font-family: var(--font-body);
+  color: rgba(0,0,0,0.45);
+  margin-bottom: 2rem;
+  font-size: 1.05rem;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.diag-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.form-row-diag {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.diag-form input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.7);
+  outline: none;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+  color: var(--color-black);
+}
+
+.diag-form input::placeholder {
+  color: rgba(0,0,0,0.3);
+}
+
+.diag-form input:focus {
+  border-color: rgba(30,54,93,0.3);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 0 0 3px rgba(30,54,93,0.08);
+  background: #fff;
+}
+
+/* Result View */
+.diag-result-view {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.diag-result-view h3 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-black);
+  letter-spacing: -0.03em;
+}
+
+.score-display {
+  font-size: 5rem;
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.05em;
+}
+
+.score-display span {
+  font-size: 2.2rem;
+  color: rgba(0,0,0,0.25);
+  font-weight: 400;
+}
+
+.result-description {
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  color: rgba(0,0,0,0.55);
+  margin-bottom: 3rem;
+  line-height: 1.6;
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .diag-modal.liquid-glass-modal {
+    padding: 2.5rem 1.5rem;
+    border-radius: 1.25rem;
+  }
+  
+  .diag-question-text {
+    font-size: 1.4rem;
+  }
+  
+  .form-row-diag {
+    grid-template-columns: 1fr;
+  }
+  
+  .diag-result-view h3 {
+    font-size: 1.5rem;
+  }
+  
+  .score-display {
+    font-size: 4rem;
+  }
+}
+
+/* PhoneInput custom styles */
+.phone-input-container {
+  width: 100%;
+}
+.PhoneInput {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+.PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.7);
+  position: relative;
+}
+.PhoneInputCountrySelect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.PhoneInputInput {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.7);
+  outline: none;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+  color: var(--color-black);
+  min-width: 0; /* Prevents overflow in flex containers */
+}
+.PhoneInputInput:focus {
+  border-color: rgba(30,54,93,0.3);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 0 0 3px rgba(30,54,93,0.08);
+  background: #fff;
+}

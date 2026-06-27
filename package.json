@@ -1,0 +1,10 @@
+{
+  "name": "novastrat-root",
+  "private": true,
+  "scripts": {
+    "dev": "npx concurrently \"npm run dev --prefix landing-page\" \"npm run dev --prefix web-app\"",
+    "dev:landing": "npm run dev --prefix landing-page",
+    "dev:web": "npm run dev --prefix web-app",
+    "install:all": "npm install --prefix landing-page && npm install --prefix web-app && npm install --prefix backend-api"
+  }
+}

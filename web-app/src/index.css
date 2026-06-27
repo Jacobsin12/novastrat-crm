@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --font-main: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --max-w: 1400px;
+}
+
+:root, [data-theme="dark"] {
+  --color-bg-main: #0c101a; 
+  --color-bg-panel: rgba(255, 255, 255, 0.04);
+  --color-bg-card-inner: rgba(255, 255, 255, 0.015);
+  
+  --color-primary: #152238;
+  --color-primary-light: #283a5e;
+  
+  --color-accent: #3b82f6; 
+  --color-accent-teal: #14b8a6;
+  --color-accent-yellow: #f59e0b;
+  
+  --color-text-main: #f8fafc; 
+  --color-text-muted: #94a3b8;
+  --color-border: rgba(255, 255, 255, 0.15);
+  
+  --neumorphic-shadow: 
+    6px 6px 14px rgba(0, 0, 0, 0.4), 
+    -4px -4px 10px rgba(255, 255, 255, 0.02);
+  --inner-shadow: 
+    inset 3px 3px 6px rgba(0,0,0,0.4), 
+    inset -2px -2px 4px rgba(255,255,255,0.03);
+
+  --bg-gradient: linear-gradient(rgba(12, 16, 26, 0.7), rgba(12, 16, 26, 0.7));
+}
+
+[data-theme="light"] {
+  --color-bg-main: #f1f5f9; 
+  --color-bg-panel: rgba(255, 255, 255, 0.5);
+  --color-bg-card-inner: rgba(255, 255, 255, 0.7);
+  
+  --color-primary: #f8fafc;
+  --color-primary-light: #e2e8f0;
+  
+  --color-accent: #2563eb; 
+  --color-accent-teal: #0d9488;
+  --color-accent-yellow: #d97706;
+  
+  --color-text-main: #1e293b; 
+  --color-text-muted: #64748b;
+  --color-border: rgba(0, 0, 0, 0.08);
+  
+  --neumorphic-shadow: 
+    6px 6px 14px rgba(0, 0, 0, 0.05), 
+    -4px -4px 10px rgba(255, 255, 255, 0.8);
+  --inner-shadow: 
+    inset 3px 3px 6px rgba(0,0,0,0.05), 
+    inset -2px -2px 4px rgba(255,255,255,0.8);
+
+  --bg-gradient: linear-gradient(rgba(241, 245, 249, 0.5), rgba(241, 245, 249, 0.5));
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: var(--font-body);
+  background-color: var(--color-bg-main);
+  color: var(--color-text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* Removed CSS Orbs in favor of the high quality wallpaper */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-main);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-text-main);
+}
+
+p, span, div {
+  color: var(--color-text-main);
+}
+
+.text-muted {
+  color: var(--color-text-muted) !important;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Utility: Dark Glass Panel */
+.glass-panel {
+  background: var(--color-bg-panel);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border: 1px solid var(--color-border);
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.15), inset 0 0 15px rgba(255,255,255,0.1);
+  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.neumorphic-inner {
+  background: var(--color-bg-card-inner);
+  border-radius: 16px;
+  box-shadow: var(--inner-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Scrollbar for Dark Theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2); 
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1); 
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2); 
+}
+
+/* Base App Layout */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  height: 100vh;
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+    padding-top: 5.5rem; /* Space for mobile header */
+  }
+}

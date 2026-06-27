@@ -1,0 +1,6 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Una silueta más decente de un ave en vuelo -->
+  <path d="M10,50 Q40,80 80,30 Q60,60 40,55 Q20,50 10,50 Z" fill="#1e365d"/>
+  <path d="M40,55 Q60,30 85,10 Q65,40 40,55 Z" fill="#1e365d"/>
+  <path d="M10,50 Q20,30 35,40 Q25,45 10,50 Z" fill="#1e365d"/>
+</svg>

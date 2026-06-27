@@ -1,0 +1,337 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent; 
+  position: relative;
+  overflow: hidden;
+}
+
+/* Base styles for Image and Container */
+.login-image-section {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 55%; 
+  z-index: 1;
+}
+
+.office-bg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.login-container-mobile {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Mobile: Card Section bottom overlay */
+.login-card-section {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 55%;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Base Card Style (Mobile) */
+.login-card {
+  width: 100%;
+  height: 100%;
+  background: var(--color-bg-panel) !important; 
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border-radius: 40px 40px 0 0 !important;
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 -15px 40px rgba(0,0,0,0.2) !important;
+  border: none !important;
+  border-top: 1px solid var(--color-border) !important;
+}
+
+/* -------------------------------------
+   DESKTOP RESPONSIVE LAYOUT (50/50 SPLIT)
+-------------------------------------- */
+@media (min-width: 1024px) {
+  .login-container-mobile {
+    flex-direction: row;
+  }
+
+  /* Left Half: Image */
+  .login-image-section {
+    position: relative;
+    width: 50%;
+    height: 100vh;
+    top: auto;
+    left: auto;
+  }
+
+  /* Right Half: Form Container */
+  .login-card-section {
+    position: relative;
+    width: 50%;
+    height: 100vh;
+    bottom: auto;
+    left: auto;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Liquid Glass Panel over the animated background */
+  .login-card {
+    border-radius: 0 !important; /* Flat edge on the split */
+    height: 100%;
+    width: 100%;
+    padding: 0 15%; /* Spacing inside the form half */
+    background: var(--color-bg-panel) !important; /* Very translucent glass */
+    backdrop-filter: blur(40px) saturate(150%) !important;
+    border: none !important;
+    border-left: 1px solid var(--color-border) !important; /* Divider line */
+    box-shadow: -10px 0 30px rgba(0,0,0,0.2) !important;
+    justify-content: center;
+  }
+}
+
+/* -------------------------------------
+   FORM ELEMENTS (Shared)
+-------------------------------------- */
+.login-title {
+  font-size: 1.8rem;
+  font-family: var(--font-body);
+  color: var(--color-text-main);
+  font-weight: 700;
+  margin-bottom: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.login-form-element {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.input-rel {
+  position: relative;
+}
+
+.login-input {
+  width: 100%;
+  padding: 1.1rem 1.2rem;
+  border-radius: 16px;
+  background-color: var(--color-bg-card-inner);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-main);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  outline: none;
+  box-shadow: var(--inner-shadow);
+}
+
+.login-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.login-input:focus {
+  border-color: var(--color-accent-teal);
+  background-color: var(--color-bg-card-inner);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15), var(--inner-shadow);
+}
+
+.input-icon-right {
+  position: absolute;
+  right: 1.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.cursor-pointer:hover {
+  color: #6b7280;
+}
+
+.login-forgot {
+  text-align: right;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+}
+
+.login-forgot a {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  transition: color 0.2s;
+}
+
+.login-forgot a:hover {
+  color: var(--color-accent-teal);
+}
+
+.login-action {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.btn-login-submit {
+  width: 100%;
+  max-width: 250px;
+  padding: 1rem;
+  background-color: var(--color-gold-btn);
+  color: #ffffff;
+  border: none;
+  border-radius: 16px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(234, 179, 8, 0.25);
+}
+
+.btn-login-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(234, 179, 8, 0.35);
+  background-color: #facc15;
+}
+
+.btn-login-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.login-footer a {
+  color: var(--color-accent-teal);
+  font-weight: 500;
+}
+
+.login-footer a:hover {
+  text-decoration: underline;
+}
+
+/* -------------------------------------
+   ANIMATED FINANCIAL BACKGROUND
+-------------------------------------- */
+.animated-bg {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-text-overlay {
+  position: absolute;
+  z-index: 5;
+  left: 10%;
+  bottom: 20%;
+}
+
+.bg-text-overlay h2 {
+  font-family: var(--font-main);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.finance-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  z-index: 1;
+}
+
+.orb-1 {
+  width: 300px;
+  height: 300px;
+  background: rgba(212, 175, 55, 0.15); /* Gold */
+  top: 10%;
+  left: -10%;
+  animation: floatOrbSlow 15s infinite alternate ease-in-out;
+}
+
+.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: rgba(59, 130, 246, 0.1); /* Blue */
+  bottom: -10%;
+  right: -10%;
+  animation: floatOrbSlow 20s infinite alternate-reverse ease-in-out;
+}
+
+.falling-coin {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(212, 175, 55, 0.6);
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 1.5rem;
+  z-index: 2;
+  top: -100px; /* Start above screen */
+  animation: fallCoin linear infinite;
+}
+
+.coin-1 { left: 15%; animation-duration: 12s; animation-delay: 0s; font-size: 1.8rem; width: 70px; height: 70px; }
+.coin-2 { left: 35%; animation-duration: 15s; animation-delay: 3s; font-size: 1.2rem; width: 50px; height: 50px; }
+.coin-3 { left: 55%; animation-duration: 10s; animation-delay: 1s; font-size: 2rem; width: 80px; height: 80px; }
+.coin-4 { left: 75%; animation-duration: 18s; animation-delay: 5s; }
+.coin-5 { left: 85%; animation-duration: 14s; animation-delay: 2s; font-size: 1.2rem; width: 50px; height: 50px; }
+.coin-6 { left: 5%; animation-duration: 16s; animation-delay: 7s; font-size: 1.6rem; width: 65px; height: 65px; }
+
+@keyframes floatOrbSlow {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, -30px) scale(1.1); }
+  100% { transform: translate(-20px, 20px) scale(0.9); }
+}
+
+@keyframes fallCoin {
+  0% {
+    transform: translateY(-100px) rotate(0deg) scale(0.8);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(120vh) rotate(360deg) scale(1.1);
+    opacity: 0;
+  }
+}
