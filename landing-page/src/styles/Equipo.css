@@ -206,4 +206,27 @@
   line-height: 1.6;
 }
 
+/* ─── MOBILE SCROLL-TRIGGERED FOCUS EFFECT ─── */
+@media (max-width: 768px) {
+  /* When one card is active on mobile, blur the others */
+  .team-grid.has-active-mobile .team-card:not(.active-mobile) {
+    filter: blur(3px) !important;
+    opacity: 0.55 !important;
+    transform: scale(0.96) !important;
+  }
+  
+  /* Style for the card in the center of the viewport */
+  .team-card.active-mobile {
+    filter: blur(0) !important;
+    opacity: 1 !important;
+    transform: scale(1.06) translateY(-5px) !important;
+    z-index: 10;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 15px 30px rgba(0, 0, 0, 0.12) !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+  }
+}
+
+
 

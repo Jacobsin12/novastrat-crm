@@ -15,6 +15,50 @@ const teamMembers = [
 export function Equipo() {
   const [teamRef, teamVis] = useInView({ threshold: 0.1 });
   const [selectedMember, setSelectedMember] = useState(null);
+  const [activeCardIndex, setActiveCardIndex] = useState(null);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      // Only run this effect on mobile viewports
+      if (window.innerWidth > 768) {
+        setActiveCardIndex(null);
+        return;
+      }
+
+      const cards = document.querySelectorAll('.team-card');
+      let closestIndex = null;
+      let minDistance = Infinity;
+      const viewportCenter = window.innerHeight / 2;
+
+      cards.forEach((card, index) => {
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.top + rect.height / 2;
+        const distance = Math.abs(viewportCenter - cardCenter);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = index;
+        }
+      });
+
+      // Focus the card if it's within the center 40% of the viewport
+      if (minDistance < window.innerHeight * 0.4) {
+        setActiveCardIndex(closestIndex);
+      } else {
+        setActiveCardIndex(null);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleScroll);
+    // Initial calculation on mount
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
 
   return (
     <>
@@ -23,9 +67,13 @@ export function Equipo() {
           <div className="eyebrow">Profesionales</div>
           <h2 style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', letterSpacing: '-0.04em', marginBottom: '3rem', color: '#000' }}>Nuestro Equipo.</h2>
 
-          <div className="team-grid">
+          <div className={`team-grid ${activeCardIndex !== null ? 'has-active-mobile' : ''}`}>
             {teamMembers.map((member, idx) => (
-              <div key={idx} className="team-card" onClick={() => setSelectedMember(member)}>
+              <div 
+                key={idx} 
+                className={`team-card ${activeCardIndex === idx ? 'active-mobile' : ''}`} 
+                onClick={() => setSelectedMember(member)}
+              >
                 <div className="team-image-wrapper">
                   <img
                     src={member.img}
