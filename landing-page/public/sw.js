@@ -1,10 +1,11 @@
-const CACHE_NAME = 'nova-strat-v2'; // Incremented version to force update
+const CACHE_NAME = 'nova-strat-v3'; // Incremented version to force update and cache offline.html
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
   '/favicon-32x32.png',
-  '/pwa-192x192.png'
+  '/pwa-192x192.png',
+  '/offline.html'
 ];
 
 self.addEventListener('install', event => {
@@ -46,8 +47,8 @@ self.addEventListener('fetch', event => {
           });
         })
         .catch(() => {
-          // If offline, fall back to cached index.html
-          return caches.match(event.request);
+          // If offline or connection fails (offline / server down), serve offline.html
+          return caches.match('/offline.html');
         })
     );
     return;
