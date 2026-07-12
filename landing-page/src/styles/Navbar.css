@@ -79,10 +79,10 @@
   right: 0;
   bottom: 0;
   z-index: 40; /* Below the navbar (50) */
-  background: rgba(11, 19, 32, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.6);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -104,13 +104,13 @@
 }
 
 .mobile-nav-overlay a {
-  color: var(--color-white);
+  color: var(--color-black);
   transition: color 0.2s ease;
   letter-spacing: -0.02em;
 }
 
 .mobile-nav-overlay a.active-link {
-  color: var(--color-gold);
+  color: var(--color-accent);
   font-weight: 700;
 }
 
