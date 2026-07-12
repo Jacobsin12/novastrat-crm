@@ -625,6 +625,38 @@ async function sendPasswordRecoveryEmail(to, name, tempPassword, loginUrl = 'htt
     return { success: false, error: error.message };
   }
 }
+function buildContactEmailHTML(name, email, subject, message) {
+  return `
+    <div style="font-family: Arial, sans-serif; padding: 20px;">
+      <h2>Nuevo Mensaje de Contacto - Landing Page</h2>
+      <p><strong>Nombre:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Asunto:</strong> ${subject}</p>
+      <p><strong>Mensaje:</strong></p>
+      <p style="background: #f5f5f5; padding: 15px; border-radius: 5px;">${message.replace(/\n/g, '<br>')}</p>
+    </div>
+  `;
+}
 
-module.exports = { sendWelcomeEmail, sendSuspensionEmail, sendPasswordRecoveryEmail };
+async function sendContactEmail({ name, email, subject, message }) {
+  try {
+    const transport = await getTransporter();
+    const html = buildContactEmailHTML(name, email, subject, message);
+
+    const info = await transport.sendMail({
+      from: \`"NovaStrat Web" <\${process.env.SMTP_FROM || 'noreply@novastratmx.com'}>\`,
+      to: 'nova.strat.consulting@gmail.com',
+      replyTo: email,
+      subject: \`Nuevo Contacto: \${subject || 'Sin asunto'}\`,
+      html
+    });
+    console.log(\`[Email] Correo de contacto enviado por \${email}\`);
+    return { success: true };
+  } catch (error) {
+    console.error(\`[Email] Error enviando correo de contacto:\`, error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+module.exports = { sendWelcomeEmail, sendSuspensionEmail, sendPasswordRecoveryEmail, sendContactEmail };
 

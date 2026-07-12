@@ -28,10 +28,42 @@ const IconLinkedin = ({ size = 24 }) => (
 export function Contacto() {
   const [ctaRef, ctaVis] = useInView({ threshold: 0.1 });
 
-  const handleFormSubmit = (e) => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    alert('¡Mensaje enviado! Nos pondremos en contacto contigo pronto.');
-    e.currentTarget.reset();
+    setIsSubmitting(true);
+    
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      subject: formData.get('subject'),
+      message: formData.get('message'),
+    };
+
+    try {
+      // Usar la URL base del backend desde config si existe, o asumiendo /api si están en el mismo dominio.
+      // Para landing-page, si no hay API_BASE, usamos la ruta absoluta del backend.
+      const API_URL = window.location.hostname.includes('localhost') ? 'http://localhost:3000' : 'https://novastratmx.com';
+      
+      const response = await fetch(`${API_URL}/api/landing/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        alert('¡Mensaje enviado exitosamente! Nos pondremos en contacto contigo pronto.');
+        e.target.reset();
+      } else {
+        alert('Hubo un problema al enviar tu mensaje. Intenta enviarnos un correo directamente.');
+      }
+    } catch (err) {
+      alert('Error de conexión. Por favor, contáctanos por WhatsApp o correo.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -85,9 +117,9 @@ export function Contacto() {
             <label htmlFor="contact-message">Mensaje</label>
             <textarea id="contact-message" name="message" rows="4" placeholder="Cuéntanos sobre tu proyecto o consulta..." required></textarea>
           </div>
-          <button type="submit" className="btn-pill dark" style={{ width: '100%', justifyContent: 'center', padding: '0.75rem 2rem' }}>
-            Enviar Mensaje
-            <span className="arrow-circle"><ArrowRight size={18} /></span>
+          <button type="submit" className="btn-pill dark" disabled={isSubmitting} style={{ width: '100%', justifyContent: 'center', padding: '0.75rem 2rem', opacity: isSubmitting ? 0.7 : 1 }}>
+            {isSubmitting ? 'Enviando...' : 'Enviar Mensaje'}
+            {!isSubmitting && <span className="arrow-circle"><ArrowRight size={18} /></span>}
           </button>
         </form>
       </div>

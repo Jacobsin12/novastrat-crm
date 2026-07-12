@@ -7,7 +7,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { google } = require('googleapis');
-const { sendWelcomeEmail, sendSuspensionEmail, sendPasswordRecoveryEmail } = require('./emailService');
+const { sendWelcomeEmail, sendSuspensionEmail, sendPasswordRecoveryEmail, sendContactEmail } = require('./emailService');
 
 // Configuración de Google Drive
 let drive = null;
@@ -2192,6 +2192,27 @@ app.post('/api/auth/login/verify-2fa', (req, res) => {
       res.status(400).json({ error: 'El código de verificación es inválido o expiró.' });
     }
   });
+});
+
+// ----------------------------------------------------
+// CONTACT FORM (LANDING PAGE)
+// ----------------------------------------------------
+app.post('/api/landing/contact', async (req, res) => {
+  const { name, email, subject, message } = req.body;
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'Faltan campos requeridos (nombre, email, mensaje)' });
+  }
+  
+  try {
+    const result = await sendContactEmail({ name, email, subject, message });
+    if (result.success) {
+      res.json({ success: true, message: 'Mensaje enviado correctamente' });
+    } else {
+      res.status(500).json({ error: 'Error al enviar el correo' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
 
 // ----------------------------------------------------
