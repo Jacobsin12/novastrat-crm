@@ -230,6 +230,14 @@
   grid-column: span 2;
 }
 
+.col-span-3 {
+  grid-column: span 3;
+}
+
+.col-span-4 {
+  grid-column: span 4;
+}
+
 .main-content {
   flex: 1;
   display: flex;
@@ -342,7 +350,7 @@
     grid-template-columns: 1fr;
   }
 
-  .col-span-2 {
+  .col-span-2, .col-span-3, .col-span-4 {
     grid-column: span 1;
   }
 
@@ -398,7 +406,7 @@
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .col-span-2 {
+  .col-span-2, .col-span-3, .col-span-4 {
     grid-column: span 2;
   }
 }
