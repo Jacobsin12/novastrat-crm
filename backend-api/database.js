@@ -159,9 +159,9 @@ function initDB() {
       if (row.count === 0) {
         // En producción usar bcrypt, aquí para testing inicial usamos texto plano
         const bcrypt = require('bcrypt');
-        const hash = bcrypt.hashSync('admin123', 10);
-        db.run(`INSERT INTO users (name, email, password, role) VALUES ('Propietario', 'admin@novastrat.com', ?, 'admin')`, [hash]);
-        console.log('Se ha creado el usuario administrador por defecto (admin@novastrat.com / admin123)');
+        const hash = bcrypt.hashSync('admin123.', 10);
+        db.run(`INSERT INTO users (name, email, password, role) VALUES ('Propietario', 'nova.strat.consulting@gmail.com', ?, 'admin')`, [hash]);
+        console.log('Se ha creado el usuario administrador por defecto (nova.strat.consulting@gmail.com / admin123.)');
       }
     });
 
