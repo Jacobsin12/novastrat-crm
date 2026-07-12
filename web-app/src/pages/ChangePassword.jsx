@@ -82,7 +82,7 @@ export default function ChangePassword() {
         const updatedUser = { ...user, must_change_password: 0 };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          navigate('/dashboard');
         }, 1000);
       } else {
         toast.error(data.error || 'Error al actualizar la contraseña', { id: toastId });
