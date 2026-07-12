@@ -62,10 +62,10 @@ export function LegalModal({ docType, onClose }) {
   const { title, text } = content[docType];
 
   return (
-    <div className="modal-overlay" style={{ display: 'flex', zIndex: 9999 }}>
-      <div className="modal-content" style={{ maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto', position: 'relative', padding: '2.5rem' }}>
+    <div className="diag-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
+      <div className="diag-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto', position: 'relative', padding: '2.5rem' }}>
         <button 
-          className="modal-close" 
+          className="diag-close" 
           onClick={onClose}
           style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-main)' }}
         >
