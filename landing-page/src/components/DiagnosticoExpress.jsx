@@ -164,7 +164,8 @@ export default function DiagnosticoExpress({ isOpen, onClose }) {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/leads', {
+      const apiUrl = import.meta.env.VITE_API_BASE || (window.location.origin.includes('localhost') ? 'http://localhost:3000' : window.location.origin);
+      const response = await fetch(`${apiUrl}/api/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -323,7 +324,6 @@ export default function DiagnosticoExpress({ isOpen, onClose }) {
               <div className="form-group-diag">
                 <input 
                   type="email" placeholder="Correo electrónico" required 
-                  pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                   title="Ingresa un correo electrónico válido"
                   value={leadData.email} onChange={e => { setErrorMsg(''); setLeadData({...leadData, email: e.target.value}); }} 
                 />
