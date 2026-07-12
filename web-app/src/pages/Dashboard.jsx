@@ -77,7 +77,11 @@ export default function Dashboard() {
       }
       const res = await fetch(url);
       if (res.ok) {
-        const data = await res.json();
+        let data = await res.json();
+        if (userObj.role === 'admin') {
+          // Filtrar para que el admin solo vea las reuniones sin asignar o las que le asignaron a él
+          data = data.filter(m => !m.consultant_id || m.consultant_id === userObj.id);
+        }
         setAdminMeetings(data);
       }
     } catch (err) {
