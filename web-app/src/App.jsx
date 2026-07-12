@@ -17,7 +17,7 @@ import NotFound from './pages/NotFound';
 function App() {
   return (
     <ThemeProvider>
-      <Router>
+      <Router basename={import.meta.env.BASE_URL}>
       <Toaster 
         position="top-right"
         containerStyle={{
