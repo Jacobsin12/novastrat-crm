@@ -76,8 +76,12 @@ server {
 }
 EOL
 
-sudo ln -sf /etc/nginx/sites-available/novastrat /etc/nginx/sites-enabled/
+# Limpiar CUALQUIER configuracin previa que Let's Encrypt haya generado para evitar conflictos (el famoso -le-ssl.conf)
 sudo rm -f /etc/nginx/sites-enabled/default
+sudo rm -f /etc/nginx/sites-enabled/*le-ssl.conf
+sudo rm -f /etc/nginx/sites-available/*le-ssl.conf
+
+sudo ln -sf /etc/nginx/sites-available/novastrat /etc/nginx/sites-enabled/
 sudo systemctl restart nginx
 
 # 5. Obtener Certificado SSL Gratis
