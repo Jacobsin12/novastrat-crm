@@ -2247,6 +2247,6 @@ app.post('/api/auth/login/verify-2fa', (req, res) => {
 // INICIO DEL SERVIDOR
 // ----------------------------------------------------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor Backend API escuchando en el puerto ${PORT}`);
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`Servidor Backend API escuchando en el puerto ${PORT} (127.0.0.1)`);
 });
