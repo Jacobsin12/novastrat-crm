@@ -1612,17 +1612,36 @@ app.put('/api/meetings/:id/respond', (req, res) => {
     db.run(sql, params, function(err2) {
       if (err2) return res.status(500).json({ error: err2.message });
       
-      db.get(`SELECT client_id, title FROM meetings WHERE id = ?`, [id], (err3, meeting) => {
+      db.get(`SELECT client_id, consultant_id, title FROM meetings WHERE id = ?`, [id], (err3, meeting) => {
         if (!err3 && meeting) {
-          let msg = `Tu reunión "${meeting.title}" ha sido aceptada.`;
-          if (status === 'rejected') msg = `Tu reunión "${meeting.title}" ha sido rechazada.`;
-          if (status === 'proposed') msg = `Se ha propuesto un cambio de fecha para "${meeting.title}".`;
+          let msg = null;
+          let targetUserId = null;
+
+          if (status === 'accepted') {
+            msg = `Tu reunión "${meeting.title}" ha sido aceptada.`;
+            targetUserId = meeting.client_id;
+          } else if (status === 'rejected') {
+            msg = `Tu reunión "${meeting.title}" ha sido rechazada.`;
+            targetUserId = meeting.client_id;
+          } else if (status === 'proposed') {
+            msg = `Se ha propuesto un cambio de fecha para "${meeting.title}".`;
+            targetUserId = meeting.client_id;
+          } else if (status === 'completed') {
+            msg = `La reunión "${meeting.title}" ha sido marcada como completada.`;
+            targetUserId = meeting.client_id;
+          } else if (status === 'cancelled') {
+            msg = `La reunión "${meeting.title}" ha sido cancelada por el cliente.`;
+            targetUserId = meeting.consultant_id; // Notify the consultant if the client cancels
+          }
           
-          sendPushNotification(
-            'Actualización de Reunión',
-            msg,
-            '/dashboard'
-          );
+          if (msg && targetUserId) {
+            sendPushNotificationToUser(
+              targetUserId,
+              'Actualización de Reunión',
+              msg,
+              '/dashboard'
+            );
+          }
         }
       });
 

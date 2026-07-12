@@ -520,7 +520,7 @@ export default function Dashboard() {
                   {adminMeetings.filter(m => m.status === 'pending').length === 0 ? (
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Sin reuniones pendientes por confirmar.</p>
                   ) : (
-                    adminMeetings.filter(m => m.status === 'pending').slice(0, 2).map(meet => (
+                    adminMeetings.filter(m => m.status === 'pending').slice(0, 3).map(meet => (
                       <div key={meet.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(20,184,166,0.1)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid var(--color-accent-teal)' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '45px' }}>
                           <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--color-accent-teal)' }}>
@@ -573,13 +573,13 @@ export default function Dashboard() {
                   <Calendar size={20} color="var(--color-accent)" /> Solicitudes de Reuniones de Clientes
                 </h3>
 
-                {adminMeetings.length === 0 ? (
+                {adminMeetings.filter(m => m.status !== 'completed' && m.status !== 'cancelled').length === 0 ? (
                   <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '1rem' }}>
                     No hay solicitudes de reunión registradas.
                   </p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {adminMeetings.map(meet => {
+                    {adminMeetings.filter(m => m.status !== 'completed' && m.status !== 'cancelled').map(meet => {
                       const dateStr = new Date(meet.date_time).toLocaleString('es-MX', {
                         day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
                       });
@@ -619,8 +619,14 @@ export default function Dashboard() {
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
                                 <span style={{ color: '#10b981', fontSize: '0.85rem', fontWeight: 600 }}>✓ Aceptada</span>
                                 {meet.meet_link && (
-                                  <a href={meet.meet_link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.8rem', color: 'var(--color-accent)', textDecoration: 'underline' }}>Enlace de Meet</a>
+                                  <a href={meet.meet_link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.8rem', color: 'var(--color-accent)', textDecoration: 'underline', marginBottom: '0.25rem' }}>Enlace de Meet</a>
                                 )}
+                                <button 
+                                  onClick={() => handleRespondMeeting(meet.id, 'completed')} 
+                                  style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', background: '#3b82f6', border: 'none', borderRadius: '8px', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+                                >
+                                  Marcar Completada
+                                </button>
                               </div>
                             )}
 
@@ -779,128 +785,142 @@ export default function Dashboard() {
                   <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Reuniones y Asesoría</h4>
                 </div>
                 
-                {clientMeetings.length > 0 ? (() => {
-                  const m = clientMeetings[0]; // La reunión más reciente
-                  const dateStr = new Date(m.date_time).toLocaleString('es-MX', { 
-                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
-                  });
+                {(() => {
+                  const activeMeetings = clientMeetings.filter(m => m.status !== 'completed' && m.status !== 'cancelled');
                   return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, justifyContent: 'space-between', marginTop: '0.5rem' }}>
-                      <div style={{ background: 'var(--color-bg-card-inner)', borderRadius: '12px', padding: '1rem', border: '1px solid var(--color-border)', boxShadow: 'var(--inner-shadow)' }}>
-                        <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: 'var(--color-text-main)', fontWeight: 600 }}>{m.title}</h5>
-                        <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <Clock size={14} /> {dateStr}
-                        </p>
-                        
-                        {m.status === 'pending' && (
-                          <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block' }}>
-                            Pendiente de confirmar por asesor
-                          </span>
-                        )}
-                        {m.status === 'accepted' && (
-                          <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block' }}>
-                            ✓ Aceptada (Enlace generado)
-                          </span>
-                        )}
-                        {m.status === 'rejected' && (
-                          <span style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block' }}>
-                            Rechazada por el asesor
-                          </span>
-                        )}
-                        {m.status === 'proposed' && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.25rem' }}>
-                            <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block', width: 'fit-content' }}>
-                              Alternativa propuesta por asesor:
-                            </span>
-                            <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)', paddingLeft: '0.25rem' }}>
-                              Nueva fecha: {m.proposed_date_time ? new Date(m.proposed_date_time).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'No especificada'}
-                            </p>
-                            <button
-                              onClick={() => handleRespondMeeting(m.id, 'accepted')}
-                              className="btn-primary"
-                              style={{ 
-                                padding: '0.5rem 1rem', 
-                                fontSize: '0.8rem', 
-                                background: '#10b981', 
-                                border: 'none', 
-                                borderRadius: '8px', 
-                                fontWeight: 600, 
-                                boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)', 
-                                cursor: 'pointer',
-                                width: '100%',
-                                marginTop: '0.5rem',
-                                color: 'white'
-                              }}
-                            >
-                              ✓ Aceptar Propuesta
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                    <>
+                      <button 
+                        onClick={() => setIsMeetingModalOpen(true)} 
+                        className="btn-primary" 
+                        style={{ 
+                          width: '100%', 
+                          padding: '0.75rem 1rem', 
+                          borderRadius: '10px', 
+                          fontWeight: 600, 
+                          border: 'none', 
+                          background: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-teal) 100%)', 
+                          color: 'white', 
+                          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)', 
+                          transition: 'all 0.2s', 
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.5rem',
+                          marginBottom: '0.5rem'
+                        }}
+                      >
+                        <Calendar size={16} /> Solicitar Nueva Reunión
+                      </button>
 
-                      {m.status === 'accepted' && m.meet_link ? (
-                        <a 
-                          href={m.meet_link} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="btn-primary" 
-                          style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.6rem', textDecoration: 'none', alignItems: 'center' }}
-                        >
-                          <Video size={16} /> Unirse a Google Meet
-                        </a>
+                      {activeMeetings.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, overflowY: 'auto', maxHeight: '400px', paddingRight: '0.5rem' }}>
+                          {activeMeetings.map(m => {
+                            const dateStr = new Date(m.date_time).toLocaleString('es-MX', { 
+                              day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+                            });
+                            return (
+                              <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                                <div style={{ background: 'var(--color-bg-card-inner)', borderRadius: '12px', padding: '1rem', border: '1px solid var(--color-border)', boxShadow: 'var(--inner-shadow)' }}>
+                                  <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: 'var(--color-text-main)', fontWeight: 600 }}>{m.title}</h5>
+                                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                    <Clock size={14} /> {dateStr}
+                                  </p>
+                                  
+                                  {m.status === 'pending' && (
+                                    <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block' }}>
+                                      Pendiente de confirmar por asesor
+                                    </span>
+                                  )}
+                                  {m.status === 'accepted' && (
+                                    <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block' }}>
+                                      ✓ Aceptada (Enlace generado)
+                                    </span>
+                                  )}
+                                  {m.status === 'rejected' && (
+                                    <span style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block' }}>
+                                      Rechazada por el asesor
+                                    </span>
+                                  )}
+                                  {m.status === 'proposed' && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.25rem' }}>
+                                      <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block', width: 'fit-content' }}>
+                                        Alternativa propuesta por asesor:
+                                      </span>
+                                      <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)', paddingLeft: '0.25rem' }}>
+                                        Nueva fecha: {m.proposed_date_time ? new Date(m.proposed_date_time).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'No especificada'}
+                                      </p>
+                                      <button
+                                        onClick={() => handleRespondMeeting(m.id, 'accepted')}
+                                        className="btn-primary"
+                                        style={{ 
+                                          padding: '0.5rem 1rem', 
+                                          fontSize: '0.8rem', 
+                                          background: '#10b981', 
+                                          border: 'none', 
+                                          borderRadius: '8px', 
+                                          fontWeight: 600, 
+                                          boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)', 
+                                          cursor: 'pointer',
+                                          width: '100%',
+                                          marginTop: '0.5rem',
+                                          color: 'white'
+                                        }}
+                                      >
+                                        ✓ Aceptar Propuesta
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                  {m.status === 'accepted' && m.meet_link && (
+                                    <a 
+                                      href={m.meet_link} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="btn-primary" 
+                                      style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.6rem', textDecoration: 'none', alignItems: 'center' }}
+                                    >
+                                      <Video size={16} /> Unirse a Meet
+                                    </a>
+                                  )}
+                                  <button 
+                                    onClick={() => {
+                                      if(window.confirm('¿Estás seguro de cancelar esta reunión?')) {
+                                        handleRespondMeeting(m.id, 'cancelled');
+                                      }
+                                    }}
+                                    style={{ 
+                                      padding: '0.6rem', 
+                                      background: 'transparent', 
+                                      border: '1px solid #ef4444', 
+                                      color: '#ef4444', 
+                                      borderRadius: '8px', 
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontWeight: 600,
+                                      fontSize: '0.85rem'
+                                    }}
+                                    title="Cancelar reunión"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       ) : (
-                        <button 
-                          onClick={() => setIsMeetingModalOpen(true)} 
-                          className="btn-primary" 
-                          style={{ 
-                            width: '100%', 
-                            padding: '0.75rem 1rem', 
-                            borderRadius: '10px', 
-                            fontWeight: 600, 
-                            border: 'none', 
-                            background: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-teal) 100%)', 
-                            color: 'white', 
-                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)', 
-                            transition: 'all 0.2s', 
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.5rem'
-                          }}
-                        >
-                          <Calendar size={16} /> Solicitar Otra Reunión
-                        </button>
+                        <div style={{ textAlign: 'center', padding: '1rem 0', color: 'var(--color-text-muted)', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, justifyContent: 'center' }}>
+                          <p style={{ margin: 0, fontSize: '0.9rem' }}>No tienes reuniones programadas.</p>
+                        </div>
                       )}
-                    </div>
+                    </>
                   );
-                })() : (
-                  <div style={{ textAlign: 'center', padding: '1rem 0', color: 'var(--color-text-muted)', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, justifyContent: 'center' }}>
-                    <p style={{ margin: 0, fontSize: '0.9rem' }}>No tienes reuniones programadas.</p>
-                    <button 
-                      onClick={() => setIsMeetingModalOpen(true)}
-                      className="btn-primary" 
-                      style={{ 
-                        width: '100%', 
-                        padding: '0.75rem 1rem', 
-                        borderRadius: '10px', 
-                        fontWeight: 600, 
-                        border: 'none', 
-                        background: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-teal) 100%)', 
-                        color: 'white', 
-                        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)', 
-                        transition: 'all 0.2s', 
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem'
-                      }}
-                    >
-                      <Calendar size={16} /> Solicitar una Reunión
-                    </button>
-                  </div>
-                )}
+                })()}
               </div>
 
               {/* CONSULTOR ASIGNADO */}
