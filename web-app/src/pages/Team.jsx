@@ -1,6 +1,6 @@
 import { API_BASE } from '../config.js';
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Menu, UserPlus, Mail, User, Edit2, X, Key, ShieldAlert, LogOut, Phone, AlertCircle } from 'lucide-react';
+import { Search, Bell, Menu, UserPlus, Mail, User, Edit2, X, Key, ShieldAlert, LogOut, Phone, AlertCircle, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import '../styles/dashboard/Team.css';
@@ -255,7 +255,12 @@ export default function Team() {
       <div className="dashboard-grid" style={{ display: 'block' }}>
           <div className="card glass-panel" style={{ width: '100%', padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-              <h2 className="title-glass" style={{ margin: 0, fontSize: '1.5rem' }}>{roleTab === 'consultants' ? 'Equipo de Consultores' : 'Clientes Registrados'}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <h2 className="title-glass" style={{ margin: 0, fontSize: '1.5rem' }}>{roleTab === 'consultants' ? 'Equipo de Consultores' : 'Clientes Registrados'}</h2>
+                <button onClick={fetchTeam} title="Actualizar" style={{ background: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.4)', borderRadius: '8px', color: 'var(--color-accent-teal)', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.2)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.1)'; }}>
+                  <RefreshCw size={18} />
+                </button>
+              </div>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 {/* Selector de Rol */}
                 <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--color-bg-panel)', padding: '0.25rem', borderRadius: '12px', boxShadow: 'var(--inner-shadow)', border: '1px solid var(--color-border)' }}>

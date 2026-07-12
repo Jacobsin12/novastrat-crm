@@ -1,6 +1,6 @@
 import { API_BASE } from '../config.js';
 import React, { useState, useEffect } from 'react';
-import { FileText, Search, UploadCloud, File, Download, FolderOpen, FolderPlus, ArrowLeft, Trash2, ExternalLink, Users, HardDrive } from 'lucide-react';
+import { FileText, Search, UploadCloud, File, Download, FolderOpen, FolderPlus, ArrowLeft, Trash2, ExternalLink, Users, HardDrive, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import '../styles/dashboard/Vault.css';
@@ -224,9 +224,14 @@ function SimpleVault({ user }) {
 
       <div className="dashboard-grid">
         <div className="card glass-panel col-span-2" style={{ padding: '1.5rem' }}>
-          <h3 style={{ marginBottom: '1.5rem', fontSize: '1.25rem', color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FileText size={20} color="var(--color-accent-teal)" /> Archivos Recientes
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FileText size={20} color="var(--color-accent-teal)" /> Archivos Recientes
+            </h3>
+            <button onClick={() => { fetchDocuments(); fetchRootDriveFolder(); }} title="Actualizar" style={{ background: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.4)', borderRadius: '8px', color: 'var(--color-accent-teal)', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.2)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.1)'; }}>
+              <RefreshCw size={18} />
+            </button>
+          </div>
           {documents.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--color-text-muted)' }}>
               <FileText size={48} opacity={0.2} style={{ marginBottom: '1rem' }} />
@@ -531,15 +536,20 @@ function AdminVault({ user }) {
       <div className="vault-admin-layout">
         {/* LEFT: Folder list */}
         <div className={`vault-admin-folders card glass-panel ${currentFolder ? 'vault-hide-on-mobile' : ''}`} style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FolderOpen size={20} color="var(--color-accent-teal)" /> Carpetas
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FolderOpen size={20} color="var(--color-accent-teal)" /> Carpetas de Clientes
             </h3>
-            {user.role === 'admin' && (
-              <button onClick={() => setShowCreateModal(true)} className="btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                <FolderPlus size={16} /> Nueva
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button onClick={() => { fetchFolders(); if(user.role==='admin') fetchClients(); }} title="Actualizar" style={{ background: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.4)', borderRadius: '8px', color: 'var(--color-accent-teal)', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.2)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.1)'; }}>
+                <RefreshCw size={18} />
               </button>
-            )}
+              {user.role === 'admin' && (
+                <button onClick={() => setShowCreateModal(true)} className="btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <FolderPlus size={16} /> Nueva
+                </button>
+              )}
+            </div>
           </div>
 
           <div style={{ position: 'relative' }}>

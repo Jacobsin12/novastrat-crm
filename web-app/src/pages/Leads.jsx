@@ -1,6 +1,6 @@
 import { API_BASE } from '../config.js';
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Menu, UserPlus, Mail, Building, Plus, Edit2, Trash2, Phone, X, CheckCircle, AlertCircle, Target , LogOut} from 'lucide-react';
+import { Search, Bell, Menu, UserPlus, Mail, Building, Plus, Edit2, Trash2, Phone, X, CheckCircle, AlertCircle, Target , LogOut, RefreshCw} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import '../styles/dashboard/Leads.css';
@@ -209,7 +209,12 @@ export default function Leads() {
       <div className="dashboard-grid" style={{ display: 'block' }}>
           <div className="card glass-panel" style={{ width: '100%', padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-              <h2 className="title-glass" style={{ margin: 0 }}>Directorio de Leads</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <h2 className="title-glass" style={{ margin: 0 }}>Directorio de Leads</h2>
+                <button onClick={fetchLeads} title="Actualizar" style={{ background: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.4)', borderRadius: '8px', color: 'var(--color-accent-teal)', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.2)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.1)'; }}>
+                  <RefreshCw size={18} />
+                </button>
+              </div>
               
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.2)', padding: '0.25rem', borderRadius: '12px', boxShadow: 'var(--inner-shadow)' }}>

@@ -1,6 +1,6 @@
 import { API_BASE } from '../config.js';
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Columns, Settings, LogOut, Search, Bell, Menu, X, Users, DollarSign, TrendingUp, Briefcase, CheckCircle, Clock, Calendar, Download, PhoneCall, Mail, Video, ChevronRight, AlertTriangle, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, FileText, Columns, Settings, LogOut, Search, Bell, Menu, X, Users, DollarSign, TrendingUp, Briefcase, CheckCircle, Clock, Calendar, Download, PhoneCall, Mail, Video, ChevronRight, AlertTriangle, MessageCircle, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -241,13 +241,28 @@ export default function Dashboard() {
 
   if (!user) return null;
 
+  const refreshDashboard = () => {
+    if (!user) return;
+    fetchStats(user);
+    if (user.role === 'client') {
+      fetchClientData(user.id);
+    } else {
+      fetchAdminMeetings(user);
+    }
+  };
+
   return (
     <div className="dashboard-grid">
           {user.role === 'admin' && (
             <>
               {/* WELCOME CARD */}
-              <div className="card glass-panel col-span-2 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem' }}>
-                <h1 className="title-glass" style={{ margin: 0 }}>Panel de Dirección (CEO)</h1>
+              <div className="card glass-panel col-span-2 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <h1 className="title-glass" style={{ margin: 0 }}>Panel de Dirección (CEO)</h1>
+                  <button onClick={refreshDashboard} title="Actualizar" style={{ background: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.4)', borderRadius: '8px', color: 'var(--color-accent-teal)', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.2)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.1)'; }}>
+                    <RefreshCw size={18} />
+                  </button>
+                </div>
                 <p style={{ margin: 0, fontSize: '1rem' }}>Bienvenido, <strong>{user.name}</strong>. Aquí tienes el resumen financiero y operativo de Nova Strat.</p>
               </div>
 
@@ -433,8 +448,13 @@ export default function Dashboard() {
            {user.role === 'consultant' && (
             <>
               {/* WELCOME */}
-              <div className="card glass-panel col-span-2 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem' }}>
-                <h1 className="title-glass" style={{ margin: 0 }}>Panel de Consultor</h1>
+              <div className="card glass-panel col-span-2 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <h1 className="title-glass" style={{ margin: 0 }}>Panel de Consultor</h1>
+                  <button onClick={refreshDashboard} title="Actualizar" style={{ background: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.4)', borderRadius: '8px', color: 'var(--color-accent-teal)', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.2)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.1)'; }}>
+                    <RefreshCw size={18} />
+                  </button>
+                </div>
                 <p style={{ margin: 0, fontSize: '1rem' }}>Buen día, <strong>{user.name}</strong>. Aquí tienes tu resumen operativo y agenda de hoy.</p>
               </div>
 
@@ -667,8 +687,13 @@ export default function Dashboard() {
           {user.role === 'client' && (
             <>
               {/* WELCOME */}
-              <div className="card glass-panel col-span-2 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem' }}>
-                <h1 className="title-glass" style={{ margin: 0 }}>Tu Portal de Proyecto</h1>
+              <div className="card glass-panel col-span-2 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <h1 className="title-glass" style={{ margin: 0 }}>Tu Portal de Proyecto</h1>
+                  <button onClick={refreshDashboard} title="Actualizar" style={{ background: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.4)', borderRadius: '8px', color: 'var(--color-accent-teal)', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.2)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.1)'; }}>
+                    <RefreshCw size={18} />
+                  </button>
+                </div>
                 <p style={{ margin: 0, fontSize: '1rem' }}>
                   Bienvenido, <strong>{user.name}</strong>. Aquí puedes dar seguimiento en tiempo real al avance de tu consultoría.
                 </p>
