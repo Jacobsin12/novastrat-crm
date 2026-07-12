@@ -5,7 +5,7 @@ import logoSrc from '../assets/nova1.png';
 
 export function Navbar({ activeSection, menuOpen, setMenuOpen }) {
   const handleClientAccess = () => {
-    const webAppUrl = import.meta.env.VITE_WEB_APP_URL || (window.location.origin.includes('5174') ? window.location.origin.replace('5174', '5173') : 'http://localhost:5173');
+    const webAppUrl = import.meta.env.VITE_WEB_APP_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5173' : window.location.origin + '/app');
     window.location.href = `${webAppUrl}/login`;
   };
 
