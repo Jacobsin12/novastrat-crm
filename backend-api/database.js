@@ -157,11 +157,14 @@ function initDB() {
     // 6. Seeder: Insertar un Admin por defecto si no hay usuarios
     db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
       if (row.count === 0) {
-        // En producción usar bcrypt, aquí para testing inicial usamos texto plano
+        const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@novastrat.com';
+        const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'admin123';
+        
         const bcrypt = require('bcrypt');
-        const hash = bcrypt.hashSync('admin123.', 10);
-        db.run(`INSERT INTO users (name, email, password, role) VALUES ('Propietario', 'nova.strat.consulting@gmail.com', ?, 'admin')`, [hash]);
-        console.log('Se ha creado el usuario administrador por defecto (nova.strat.consulting@gmail.com / admin123.)');
+        const hash = bcrypt.hashSync(adminPassword, 10);
+        
+        db.run(`INSERT INTO users (name, email, password, role) VALUES ('Propietario', ?, ?, 'admin')`, [adminEmail, hash]);
+        console.log(`Se ha creado el usuario administrador por defecto usando las variables de entorno.`);
       }
     });
 
