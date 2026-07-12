@@ -555,7 +555,7 @@ export default function Dashboard() {
                 ) : (
                   <ul className="activity-list">
                     {stats.recentActivity.map((act, index) => (
-                      <li key={index} className="activity-item" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--color-border)', marginBottom: '0.75rem' }}>
+                      <li key={index} className="activity-item">
                         <div className={`activity-dot ${act.type === 'document' ? 'green' : 'blue'}`}></div>
                         <div className="activity-text">
                           <p style={{ margin: 0, fontWeight: 500 }}>{act.description}</p>
@@ -1026,7 +1026,7 @@ export default function Dashboard() {
                 <ul className="activity-list">
                   {clientDocuments.length > 0 ? clientDocuments.map(doc => {
                     return (
-                      <li key={doc.id} className="activity-item" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--color-border)' }}>
+                      <li key={doc.id} className="activity-item">
                         <div className="activity-dot blue"></div>
                         <div className="activity-text">
                           <p style={{ margin: 0, fontWeight: 500 }}>
@@ -1164,7 +1164,7 @@ export default function Dashboard() {
           )}
 
           {user.role !== 'client' && (
-            <div className="card glass-panel col-span-4">
+            <div className="card glass-panel col-span-4" style={{ padding: '1.5rem' }}>
               <h3 style={{marginBottom: '1.5rem', color: 'var(--color-text-main)', fontSize: '1.25rem'}}>Actividad Reciente</h3>
               <ul className="activity-list">
                 {stats.recentActivity && stats.recentActivity.length > 0 ? (
@@ -1174,14 +1174,7 @@ export default function Dashboard() {
                     if (act.type === 'project') dotColor = 'gold';
                     
                     return (
-                      <li 
-                        key={index} 
-                        className="activity-item" 
-                        style={{ 
-                          paddingBottom: '1rem', 
-                          borderBottom: index < stats.recentActivity.length - 1 ? '1px solid var(--color-border)' : 'none' 
-                        }}
-                      >
+                      <li key={index} className="activity-item">
                         <div className={`activity-dot ${dotColor}`}></div>
                         <div className="activity-text">
                           <p style={{ margin: 0, fontWeight: 500 }}>{act.description}</p>
