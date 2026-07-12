@@ -357,7 +357,7 @@ export default function Dashboard() {
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            {meet.status === 'pending' && (
+                            {meet.status === 'pending' && (!meet.consultant_id || meet.consultant_id === user.id) ? (
                               <div style={{ display: 'flex', gap: '0.75rem' }}>
                                 <button 
                                   onClick={() => handleRespondMeeting(meet.id, 'accepted')} 
@@ -374,6 +374,8 @@ export default function Dashboard() {
                                   Proponer Nueva Fecha
                                 </button>
                               </div>
+                            ) : meet.status === 'pending' && (
+                              <span style={{ color: '#f59e0b', fontSize: '0.85rem', fontWeight: 600 }}>Pendiente por confirmar</span>
                             )}
 
                             {meet.status === 'accepted' && (
@@ -596,7 +598,7 @@ export default function Dashboard() {
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            {meet.status === 'pending' && (
+                            {meet.status === 'pending' && (!meet.consultant_id || meet.consultant_id === user.id) ? (
                               <div style={{ display: 'flex', gap: '0.75rem' }}>
                                 <button 
                                   onClick={() => handleRespondMeeting(meet.id, 'accepted')} 
@@ -613,6 +615,8 @@ export default function Dashboard() {
                                   Proponer Nueva Fecha
                                 </button>
                               </div>
+                            ) : meet.status === 'pending' && (
+                              <span style={{ color: '#f59e0b', fontSize: '0.85rem', fontWeight: 600 }}>Pendiente por confirmar</span>
                             )}
 
                             {meet.status === 'accepted' && (
