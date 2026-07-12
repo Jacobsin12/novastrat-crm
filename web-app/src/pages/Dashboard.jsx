@@ -779,7 +779,7 @@ export default function Dashboard() {
               </div>
 
               {/* NEXT MEETING */}
-              <div className="card glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'space-between' }}>
+              <div className="card glass-panel col-span-2" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Calendar size={18} color="var(--color-accent)" />
                   <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Reuniones y Asesoría</h4>
@@ -924,7 +924,7 @@ export default function Dashboard() {
               </div>
 
               {/* CONSULTOR ASIGNADO */}
-              <div className="card glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'space-between' }}>
+              <div className="card glass-panel col-span-2" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Users size={18} color="var(--color-accent)" />
                   <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Tu Equipo</h4>
