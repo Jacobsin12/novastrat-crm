@@ -282,16 +282,6 @@ export default function Dashboard() {
               </div>
 
               {/* STAT CARDS - MINIMALIST */}
-              <div className="card glass-panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', padding: '1.5rem', gap: '0.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <DollarSign size={18} color="var(--color-text-muted)" />
-                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Ingresos Estimados</h4>
-                </div>
-                <h2 style={{ fontSize: '2rem', margin: 0, color: 'var(--color-text-main)', fontWeight: 600 }}>
-                  {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(stats.estimatedRevenue)}
-                </h2>
-                <p style={{color: '#10b981', fontSize: '0.85rem', margin: 0, fontWeight: 500}}>+12% este mes</p>
-              </div>
               
               <div className="card glass-panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', padding: '1.5rem', gap: '0.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
