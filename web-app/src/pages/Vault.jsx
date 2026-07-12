@@ -12,7 +12,7 @@ const API = `${API_BASE}`;
 // ============================================================
 function SimpleVault({ user }) {
   const [documents, setDocuments] = useState([]);
-  const [fileToUpload, setFileToUpload] = useState(null);
+  const [filesToUpload, setFilesToUpload] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [driveFiles, setDriveFiles] = useState([]);
   const [loadingDrive, setLoadingDrive] = useState(false);
@@ -308,7 +308,7 @@ function AdminVault({ user }) {
   const [loadingFolders, setLoadingFolders] = useState(true);
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filesToUpload, setFilesToUpload] = useState([]);
+  const [fileToUpload, setFileToUpload] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
