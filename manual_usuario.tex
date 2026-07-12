@@ -1,0 +1,264 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+
+% Configuración de la página
+\geometry{left=2.5cm, right=2.5cm, top=3cm, bottom=3cm}
+\setlength{\parskip}{1em}
+\setlength{\parindent}{0pt}
+
+% Colores de NovaStrat
+\definecolor{NovaTeal}{HTML}{14B8A6}
+\definecolor{NovaDark}{HTML}{1A1D24}
+\definecolor{NovaGold}{HTML}{EAB308}
+
+% Configuración de enlaces
+\hypersetup{
+    colorlinks=true,
+    linkcolor=NovaTeal,
+    filecolor=magenta,      
+    urlcolor=NovaTeal,
+}
+
+% Encabezado y pie de página
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{NovaTeal}{\textbf{NovaStrat Consulting}}}
+\fancyhead[R]{Manual de Usuario}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{NovaTeal}\leaders\hrule height \headrulewidth\hfill}}
+
+% Estilo de títulos
+\titleformat{\section}{\Large\bfseries\color{NovaTeal}}{\thesection}{1em}{}
+\titleformat{\subsection}{\large\bfseries\color{NovaDark}}{\thesubsection}{1em}{}
+
+\begin{document}
+
+% Portada
+\begin{titlepage}
+    \centering
+    \vspace*{4cm}
+    
+    % \includegraphics[width=0.5\textwidth]{images/logo.png} % Reemplazar con el logo real
+    \vspace{2cm}
+    
+    {\Huge\bfseries\color{NovaTeal} Manual de Usuario\par}
+    \vspace{1cm}
+    {\Large Plataforma CRM y Gestión de Clientes\par}
+    \vspace{2cm}
+    {\Large \textbf{NovaStrat Consulting}\par}
+    \vfill
+    {\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Introducción}
+Bienvenido al Manual de Usuario de la plataforma CRM de NovaStrat Consulting. Esta plataforma ha sido diseñada para optimizar la gestión de prospectos (leads), clientes, consultores y archivos compartidos mediante una interfaz moderna, rápida y segura.
+
+La aplicación cuenta con tres perfiles principales, cada uno con permisos y vistas específicas:
+\begin{itemize}
+    \item \textbf{Administrador:} Control total de la plataforma, gestión de leads, clientes, equipo de consultores y configuración global.
+    \item \textbf{Consultor:} Acceso a los proyectos asignados, gestión de tareas (Kanban) y archivos de los clientes a su cargo.
+    \item \textbf{Cliente:} Acceso a su panel personal (Dashboard) para ver el progreso de su proyecto, el equipo asignado y su bóveda de archivos segura.
+\end{itemize}
+
+\section{Acceso y Configuración Inicial}
+Para acceder a la plataforma, navegue a la URL proporcionada (ej. \url{https://novastratmx.com/app/}).
+
+\subsection{Inicio de Sesión (Login)}
+Introduzca su correo electrónico y contraseña. Si tiene habilitada la Autenticación en Dos Pasos (2FA), se le solicitará el código de 6 dígitos generado por su aplicación (ej. Google Authenticator).
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/01_login.png}
+    \caption{Pantalla de Inicio de Sesión}
+\end{figure}
+
+\subsection{Instalación como Aplicación (PWA)}
+La plataforma puede instalarse en su computadora o dispositivo móvil como una Aplicación Web Progresiva (PWA):
+\begin{itemize}
+    \item \textbf{En PC/Mac:} En Chrome o Edge, haga clic en el ícono de instalación en la barra de direcciones superior derecha (junto a la estrella de favoritos).
+    \item \textbf{En Móvil (iOS):} Abra Safari, toque el botón ``Compartir'' y seleccione ``Agregar a inicio''.
+    \item \textbf{En Móvil (Android):} Chrome mostrará un aviso en la parte inferior para ``Agregar a la pantalla principal''.
+\end{itemize}
+
+\newpage
+
+\section{Perfil: Administrador}
+El Administrador tiene la visión global del negocio.
+
+\subsection{Panel Principal (Dashboard)}
+Proporciona métricas clave en tiempo real: total de clientes, ingresos estimados, tareas pendientes y prospectos activos.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/02_admin_dashboard.png}
+    \caption{Dashboard del Administrador}
+\end{figure}
+
+\subsection{Gestión de Leads (Pipeline)}
+La pestaña \textbf{Leads} muestra un tablero tipo Kanban para gestionar el embudo de ventas.
+\begin{itemize}
+    \item \textbf{Crear Lead:} Permite registrar un nuevo prospecto de forma manual.
+    \item \textbf{Mover Leads:} Arrastre y suelte las tarjetas entre las columnas (Nuevo, En Contacto, Negociación, Convertido).
+    \item \textbf{Convertir a Cliente:} Al mover un Lead a ``Convertido'', el sistema solicitará una contraseña temporal y asignará automáticamente un consultor, creando su cuenta de Cliente y su carpeta en Google Drive.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/03_admin_pipeline.png}
+    \caption{Tablero Kanban de Leads}
+\end{figure}
+
+\subsection{Gestión de Clientes y Equipo}
+Desde la sección \textbf{Clientes}, el administrador puede ver la lista completa de clientes activos, suspender cuentas o editar su información.
+Para asignar el equipo de trabajo a un cliente:
+\begin{enumerate}
+    \item Haga clic en el botón de ``Asignar Equipo'' en la fila del cliente.
+    \item Seleccione los consultores y administradores que participarán en el proyecto.
+    \item El cliente recibirá una Notificación Push automáticamente informándole de su nuevo equipo.
+\end{enumerate}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/04_admin_asignar_equipo.png}
+    \caption{Modal de Asignación de Equipo a un Cliente}
+\end{figure}
+
+\subsection{Gestor de Carpetas (Bóveda / Drive)}
+En la sección \textbf{Bóveda}, el administrador puede gestionar la integración con Google Drive.
+\begin{itemize}
+    \item Se visualizan las carpetas maestras de cada cliente.
+    \item Es posible crear subcarpetas (ej. ``Entregables'', ``Contratos'').
+    \item Se pueden subir archivos y eliminar archivos. Al eliminar, el sistema pedirá una confirmación de seguridad.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/05_admin_vault.png}
+    \caption{Gestor de Carpetas (Vault) del Administrador}
+\end{figure}
+
+\subsection{Supervisión de Reuniones}
+Desde el panel principal, el administrador tiene una vista general de las reuniones programadas en la plataforma. 
+\begin{itemize}
+    \item Se muestran las reuniones pendientes y aceptadas que no tienen un consultor asignado, o aquellas en las que el administrador está directamente involucrado.
+    \item Para mantener el orden y delegar responsabilidades, \textbf{solo el consultor asignado a una reunión puede aceptarla, rechazarla o proponer una nueva fecha}. El administrador actúa únicamente como supervisor en este módulo.
+\end{itemize}
+
+\newpage
+
+\section{Perfil: Consultor}
+El consultor se enfoca en la ejecución de los proyectos asignados.
+
+\subsection{Proyectos y Tareas}
+En su Dashboard, el consultor visualizará únicamente los clientes que el Administrador le ha asignado. Podrá gestionar las tareas operativas en el tablero Kanban del proyecto, moviendo tareas de ``Por Hacer'' a ``En Progreso'' y ``Completado''.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/06_consultor_dashboard.png}
+    \caption{Dashboard del Consultor con sus proyectos asignados}
+\end{figure}
+
+\subsection{Gestión Documental (Bóveda)}
+El consultor tiene acceso de lectura y escritura a las carpetas de los clientes que tiene asignados, permitiéndole subir entregables que el cliente podrá descargar.
+
+\subsection{Gestión de Reuniones y Citas}
+Los clientes pueden solicitar reuniones directamente con sus consultores asignados. Cuando esto sucede:
+\begin{itemize}
+    \item El consultor visualizará la solicitud en su Dashboard bajo la sección de ``Reuniones y Asesoría''. Podrá ver claramente con qué cliente es la cita.
+    \item \textbf{Aceptar Reunión:} Al hacer clic en aceptar, el sistema \textbf{generará automáticamente un enlace seguro de videollamada} (mediante Jitsi Meet) y el estado cambiará a ``Aceptada''.
+    \item \textbf{Proponer Nueva Fecha:} Si el consultor tiene un conflicto de agenda, puede proponer una fecha y hora alternativas. El cliente será notificado y podrá aceptar la nueva propuesta.
+    \item \textbf{Marcar Completada:} Una vez finalizada la videollamada, el consultor puede marcar la reunión como completada para mantener su historial organizado y limpio.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/12_consultor_reuniones.png}
+    \caption{Gestión de solicitudes de reuniones por parte del consultor}
+\end{figure}
+
+\newpage
+
+\section{Perfil: Cliente}
+La vista del cliente está diseñada para ser intuitiva, transparente y de solo lectura (excepto para la subida de sus propios archivos).
+
+\subsection{Inicio del Cliente (Dashboard)}
+Al iniciar sesión, el cliente visualizará:
+\begin{itemize}
+    \item El porcentaje de avance de su proyecto.
+    \item Las tarjetas del \textbf{Equipo Asignado}. Cada tarjeta contiene la foto/inicial del consultor o administrador, junto con botones rápidos para llamarle, enviarle un correo o contactarlo por WhatsApp.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/07_cliente_dashboard.png}
+    \caption{Vista del Cliente mostrando su avance y equipo asignado}
+\end{figure}
+
+\subsection{Bóveda de Archivos del Cliente}
+El cliente tiene su propia sección de \textbf{Bóveda}:
+\begin{itemize}
+    \item \textbf{Subida de archivos:} Puede arrastrar y soltar archivos (hasta 5 a la vez) para compartirlos de forma segura con los consultores.
+    \item \textbf{Descarga de Entregables:} Puede entrar a las subcarpetas creadas por el equipo de NovaStrat (en modo solo lectura) para consultar y descargar sus resultados y entregables.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/08_cliente_vault.png}
+    \caption{Bóveda del Cliente para carga y descarga de archivos}
+\end{figure}
+
+\subsection{Solicitud y Gestión de Reuniones}
+El cliente cuenta con un módulo de ``Reuniones y Asesoría'' integrado en su Dashboard, donde puede:
+\begin{itemize}
+    \item \textbf{Agendar Citas:} Usando el botón ``Solicitar Nueva Reunión'', el cliente llena un formulario donde especifica el motivo, elige la fecha/hora y, de ser necesario, \textbf{selecciona al asesor específico} de su equipo con el que desea hablar.
+    \item \textbf{Estados de Citas:} Las reuniones mostrarán etiquetas claras sobre su estado actual (por ejemplo: ``Pendiente de confirmar por asesor'', ``Aceptada'', o ``Alternativa propuesta por asesor'').
+    \item \textbf{Unirse a la Videollamada:} Una vez que el asesor acepta la reunión, aparecerá un botón azul grande de ``Unirse a Meet''. Al presionarlo, el cliente entrará automáticamente a la sala de conferencias segura sin necesidad de instalar software adicional.
+    \item \textbf{Cancelar:} Si el cliente cometió un error o ya no requiere la asesoría, puede cancelar la solicitud en cualquier momento utilizando el botón rojo de ``Cancelar''.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/10_cliente_solicitar_reunion.png}
+    \caption{Formulario para solicitar una nueva reunión}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/11_cliente_lista_reuniones.png}
+    \caption{Lista de reuniones, mostrando el estado, asesor asignado y botón de videollamada}
+\end{figure}
+
+\newpage
+
+\section{Configuración de la Cuenta y Seguridad}
+Disponible para todos los perfiles en la pestaña \textbf{Configuración}.
+
+\subsection{Edición de Perfil}
+Los administradores y consultores pueden actualizar su información personal haciendo clic en el botón ``Editar Perfil'' (ícono de engranaje/lápiz). Se permite modificar el nombre, correo electrónico y número de teléfono. Estos cambios se reflejarán inmediatamente en las tarjetas de equipo que visualiza el cliente.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/09_configuracion_perfil.png}
+    \caption{Pestaña de Configuración y Edición de Perfil}
+\end{figure}
+
+\subsection{Seguridad (Contraseña y 2FA)}
+\begin{itemize}
+    \item \textbf{Cambiar Contraseña:} Se requiere una contraseña segura (mínimo 8 caracteres, mayúsculas, números y símbolos).
+    \item \textbf{Autenticación en Dos Pasos (2FA):} Altamente recomendado. Se configura escaneando un código QR con Google Authenticator o Authy.
+\end{itemize}
+
+\subsection{Notificaciones Push}
+Para recibir alertas instantáneas en su navegador o celular (por ejemplo, cuando se asigne un nuevo consultor al equipo, cuando un cliente solicite una reunión, o cuando una reunión sea aceptada/reprogramada), el usuario debe habilitar las notificaciones push encendiendo el interruptor en Configuración. El navegador pedirá permisos que deben ser aceptados.
+
+\end{document}
