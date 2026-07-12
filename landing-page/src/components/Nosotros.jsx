@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Lightbulb, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Lightbulb, ArrowRight, Sparkles } from 'lucide-react';
 import useInView from '../hooks/useInView';
 import '../styles/Nosotros.css';
 
@@ -52,6 +52,13 @@ export function Nosotros() {
               <div className="card-title">Innovación</div>
             </div>
             <div className="card-body">Buscamos soluciones creativas y estrategias disruptivas.</div>
+          </div>
+          <div className="value-card dark">
+            <div>
+              <Sparkles size={32} style={{ color: 'var(--color-gold)', marginBottom: '0.75rem' }} />
+              <div className="card-title">Inspiración</div>
+            </div>
+            <div className="card-body">Motivamos a nuestros clientes a alcanzar nuevos horizontes.</div>
           </div>
         </div>
       </div>
