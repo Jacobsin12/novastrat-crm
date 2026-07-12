@@ -243,7 +243,7 @@ async function sendWelcomeEmail(to, name, role, tempPassword, loginUrl = 'http:/
     const html = buildWelcomeEmailHTML({ name, role, email: to, tempPassword, loginUrl });
 
     const info = await transport.sendMail({
-      from: `"NovaStrat" <${process.env.SMTP_USER || 'noreply@novastrat.com'}>`,
+      from: `"NovaStrat" <${process.env.SMTP_FROM || 'noreply@novastratmx.com'}>`,
       to,
       subject,
       html,
@@ -441,7 +441,7 @@ async function sendSuspensionEmail(to, name, role, reason) {
     const html = buildSuspensionEmailHTML({ name, role, email: to, reason });
 
     const info = await transport.sendMail({
-      from: `"NovaStrat" <${process.env.SMTP_USER || 'noreply@novastrat.com'}>`,
+      from: `"NovaStrat" <${process.env.SMTP_FROM || 'noreply@novastratmx.com'}>`,
       to,
       subject,
       html,
@@ -601,7 +601,7 @@ async function sendPasswordRecoveryEmail(to, name, tempPassword, loginUrl = 'htt
     const html = buildPasswordRecoveryEmailHTML({ name, tempPassword, loginUrl });
 
     const info = await transport.sendMail({
-      from: `"NovaStrat" <${process.env.SMTP_USER || 'noreply@novastrat.com'}>`,
+      from: `"NovaStrat" <${process.env.SMTP_FROM || 'noreply@novastratmx.com'}>`,
       to,
       subject,
       html,
