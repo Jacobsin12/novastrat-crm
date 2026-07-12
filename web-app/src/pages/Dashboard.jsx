@@ -358,6 +358,9 @@ export default function Dashboard() {
                             <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                               <Clock size={14} /> {dateStr}
                             </p>
+                            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-main)', fontWeight: 500 }}>
+                              Con: {meet.client_name} {meet.consultant_name ? `(Asesor: ${meet.consultant_name})` : ''}
+                            </p>
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -599,6 +602,9 @@ export default function Dashboard() {
                             <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                               <Clock size={14} /> {dateStr}
                             </p>
+                            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-main)', fontWeight: 500 }}>
+                              Con: {meet.client_name} {meet.consultant_name ? `(Asesor: ${meet.consultant_name})` : ''}
+                            </p>
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -831,8 +837,11 @@ export default function Dashboard() {
                               <div key={m.id} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, justifyContent: 'space-between', marginTop: '0.5rem' }}>
                                 <div style={{ background: 'var(--color-bg-card-inner)', borderRadius: '12px', padding: '1rem', border: '1px solid var(--color-border)', boxShadow: 'var(--inner-shadow)' }}>
                                   <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: 'var(--color-text-main)', fontWeight: 600 }}>{m.title}</h5>
-                                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                  <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                     <Clock size={14} /> {dateStr}
+                                  </p>
+                                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: 'var(--color-text-main)', fontWeight: 500 }}>
+                                    Asesor: {m.consultant_name || 'Sin asignar'}
                                   </p>
                                   
                                   {m.status === 'pending' && (

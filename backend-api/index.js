@@ -1471,7 +1471,7 @@ app.post('/api/users/clients/:clientId/assign-consultants', (req, res) => {
 // Obtener reuniones de un cliente específico
 app.get('/api/meetings/client/:clientId', (req, res) => {
   const { clientId } = req.params;
-  db.all(`SELECT * FROM meetings WHERE client_id = ? ORDER BY date_time DESC`, [clientId], (err, rows) => {
+  db.all(`SELECT m.*, c.name as consultant_name FROM meetings m LEFT JOIN users c ON m.consultant_id = c.id WHERE m.client_id = ? ORDER BY date_time DESC`, [clientId], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
@@ -1481,9 +1481,10 @@ app.get('/api/meetings/client/:clientId', (req, res) => {
 app.get('/api/meetings/admin', (req, res) => {
   const { consultantId } = req.query;
   let sql = `
-    SELECT m.*, u.name as client_name, u.company_name
+    SELECT m.*, u.name as client_name, u.company_name, c.name as consultant_name
     FROM meetings m
     JOIN users u ON m.client_id = u.id
+    LEFT JOIN users c ON m.consultant_id = c.id
   `;
   const params = [];
 
