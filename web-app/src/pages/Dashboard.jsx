@@ -271,7 +271,7 @@ export default function Dashboard() {
           {user.role === 'admin' && (
             <>
               {/* WELCOME CARD */}
-              <div className="card glass-panel col-span-2 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem', position: 'relative' }}>
+              <div className="card glass-panel col-span-4 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem', position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                   <h1 className="title-glass" style={{ margin: 0 }}>Panel de Dirección (CEO)</h1>
                   <button onClick={refreshDashboard} title="Actualizar" style={{ background: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.4)', borderRadius: '8px', color: 'var(--color-accent-teal)', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.2)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.1)'; }}>
@@ -293,7 +293,7 @@ export default function Dashboard() {
               </div>
 
               {/* GRÁFICA DE LEADS */}
-              <div className="card glass-panel col-span-2" style={{ display: 'flex', flexDirection: 'column', padding: '1.5rem' }}>
+              <div className="card glass-panel col-span-3" style={{ display: 'flex', flexDirection: 'column', padding: '1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                   <h3 style={{ margin: 0, color: 'var(--color-text-main)', fontSize: '1.25rem' }}>Crecimiento de Prospectos</h3>
                   <button className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }} onClick={() => navigate('/leads')}>
@@ -323,7 +323,7 @@ export default function Dashboard() {
               </div>
 
               {/* SOLICITUDES DE REUNIÓN PARA ADMIN/ASESOR */}
-              <div className="card glass-panel col-span-2" style={{ padding: '1.5rem' }}>
+              <div className="card glass-panel col-span-4" style={{ padding: '1.5rem' }}>
                 <h3 style={{ marginBottom: '1.5rem', color: 'var(--color-text-main)', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Calendar size={20} color="var(--color-accent)" /> Solicitudes de Reuniones de Clientes
                 </h3>
@@ -458,7 +458,7 @@ export default function Dashboard() {
            {user.role === 'consultant' && (
             <>
               {/* WELCOME */}
-              <div className="card glass-panel col-span-2 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem', position: 'relative' }}>
+              <div className="card glass-panel col-span-4 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem', position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                   <h1 className="title-glass" style={{ margin: 0 }}>Panel de Consultor</h1>
                   <button onClick={refreshDashboard} title="Actualizar" style={{ background: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.4)', borderRadius: '8px', color: 'var(--color-accent-teal)', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.2)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.1)'; }}>
@@ -487,7 +487,7 @@ export default function Dashboard() {
               </div>
 
               {/* LISTA DE CLIENTES ASIGNADOS */}
-              <div className="card glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', gridRow: 'span 2' }}>
+              <div className="card glass-panel col-span-2" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', gridRow: 'span 2' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Users size={18} color="var(--color-accent)" />
                   <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Mis Clientes</h4>
@@ -708,7 +708,7 @@ export default function Dashboard() {
           {user.role === 'client' && (
             <>
               {/* WELCOME */}
-              <div className="card glass-panel col-span-2 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem', position: 'relative' }}>
+              <div className="card glass-panel col-span-4 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem', position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                   <h1 className="title-glass" style={{ margin: 0 }}>Tu Portal de Proyecto</h1>
                   <button onClick={refreshDashboard} title="Actualizar" style={{ background: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.4)', borderRadius: '8px', color: 'var(--color-accent-teal)', padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }} onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.2)'; }} onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(20, 184, 166, 0.1)'; }}>
@@ -726,7 +726,7 @@ export default function Dashboard() {
               </div>
 
               {/* PROGRESS STEPPER */}
-              <div className="card glass-panel col-span-2" style={{ padding: '2rem' }}>
+              <div className="card glass-panel col-span-4" style={{ padding: '2rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                   <TrendingUp size={20} color="var(--color-accent)" />
                   <h3 style={{ margin: 0, color: 'var(--color-text-main)', fontSize: '1.25rem' }}>Progreso del Proyecto</h3>
