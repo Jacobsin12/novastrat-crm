@@ -1,10 +1,12 @@
 import { API_BASE } from '../config.js';
 import React, { useState } from 'react';
 import { Eye, EyeOff, LogOut, ChevronDown, Shield, Key, Mail } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import '../styles/Login.css';
 
 export default function Login() {
+  const navigate = useNavigate();
   const landingUrl = import.meta.env.VITE_LANDING_PAGE_URL && import.meta.env.VITE_LANDING_PAGE_URL !== 'http://localhost:5174' 
     ? import.meta.env.VITE_LANDING_PAGE_URL 
     : (window.location.origin.includes('localhost') ? 'http://localhost:5174' : window.location.origin);
@@ -65,9 +67,9 @@ export default function Login() {
         toast.success('¡Autenticación exitosa!', { id: toastId });
         localStorage.setItem('user', JSON.stringify(data));
         if (data.must_change_password === 1) {
-          window.location.href = '/change-password';
+          navigate('/change-password');
         } else {
-          window.location.href = '/dashboard';
+          navigate('/dashboard');
         }
       } else {
         toast.error(data.error || 'Código de verificación incorrecto.', { id: toastId });
@@ -109,9 +111,9 @@ export default function Login() {
         
         // Si el usuario debe cambiar su contraseña, redirigir a la pantalla de cambio
         if (data.must_change_password === 1) {
-          window.location.href = '/change-password';
+          navigate('/change-password');
         } else {
-          window.location.href = '/dashboard';
+          navigate('/dashboard');
         }
       } else {
         toast.error('Usuario o contraseña incorrecto', { id: toastId });
