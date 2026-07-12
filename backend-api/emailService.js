@@ -644,16 +644,16 @@ async function sendContactEmail({ name, email, subject, message }) {
     const html = buildContactEmailHTML(name, email, subject, message);
 
     const info = await transport.sendMail({
-      from: \`"NovaStrat Web" <\${process.env.SMTP_FROM || 'noreply@novastratmx.com'}>\`,
+      from: `"NovaStrat Web" <${process.env.SMTP_FROM || 'noreply@novastratmx.com'}>`,
       to: 'nova.strat.consulting@gmail.com',
       replyTo: email,
-      subject: \`Nuevo Contacto: \${subject || 'Sin asunto'}\`,
+      subject: `Nuevo Contacto: ${subject || 'Sin asunto'}`,
       html
     });
-    console.log(\`[Email] Correo de contacto enviado por \${email}\`);
+    console.log(`[Email] Correo de contacto enviado por ${email}`);
     return { success: true };
   } catch (error) {
-    console.error(\`[Email] Error enviando correo de contacto:\`, error.message);
+    console.error(`[Email] Error enviando correo de contacto:`, error.message);
     return { success: false, error: error.message };
   }
 }
