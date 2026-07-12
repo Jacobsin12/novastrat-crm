@@ -335,6 +335,8 @@ function AdminVault({ user }) {
   const [showSubfolderModal, setShowSubfolderModal] = useState(false);
   const [newSubfolderName, setNewSubfolderName] = useState('');
   const [isCreatingSubfolder, setIsCreatingSubfolder] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => { 
     fetchFolders(); 
@@ -501,14 +503,28 @@ function AdminVault({ user }) {
     finally { setIsCreatingSubfolder(false); }
   };
 
-  const handleDeleteFile = async (fileId, fileName) => {
-    if (!window.confirm(`¿Eliminar "${fileName}" de Google Drive? Esta acción no se puede deshacer.`)) return;
+  const confirmDeleteFile = (fileId, fileName) => {
+    setFileToDelete({ id: fileId, name: fileName });
+  };
+
+  const handleDeleteFile = async () => {
+    if (!fileToDelete) return;
+    setIsDeleting(true);
     const toastId = toast.loading('Eliminando archivo...');
     try {
-      const res = await fetch(`${API_BASE}/api/admin/drive/files/${fileId}`, { method: 'DELETE' });
-      if (res.ok) { toast.success('Archivo eliminado', { id: toastId }); setFiles(files.filter(f => f.id !== fileId)); }
-      else { toast.error('Error al eliminar', { id: toastId }); }
-    } catch (err) { toast.error('Error de conexión', { id: toastId }); }
+      const res = await fetch(`${API_BASE}/api/admin/drive/files/${fileToDelete.id}`, { method: 'DELETE' });
+      if (res.ok) { 
+        toast.success('Archivo eliminado', { id: toastId }); 
+        setFiles(files.filter(f => f.id !== fileToDelete.id)); 
+        setFileToDelete(null);
+      } else { 
+        toast.error('Error al eliminar', { id: toastId }); 
+      }
+    } catch (err) { 
+      toast.error('Error de conexión', { id: toastId }); 
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const formatFileSize = (bytes) => {
@@ -656,7 +672,7 @@ function AdminVault({ user }) {
                         </a>
                       )}
                       {file.source === 'drive' && (user.role === 'admin' || (user.role === 'consultant' && file.uploadedBy === user.id)) && (
-                        <button onClick={() => handleDeleteFile(file.id, file.name)} title="Eliminar" style={{ width: '34px', height: '34px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', cursor: 'pointer' }}>
+                        <button onClick={() => confirmDeleteFile(file.id, file.name)} title="Eliminar" style={{ width: '34px', height: '34px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', cursor: 'pointer' }}>
                           <Trash2 size={16} />
                         </button>
                       )}
@@ -725,6 +741,37 @@ function AdminVault({ user }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {fileToDelete && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '1.5rem', background: 'var(--color-bg-overlay)', textAlign: 'center' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+              <Trash2 size={24} color="#ef4444" />
+            </div>
+            <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--color-text-main)', marginBottom: '0.5rem' }}>¿Eliminar archivo?</h3>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: '1.4' }}>
+              Estás a punto de eliminar <strong>"{fileToDelete.name}"</strong> permanentemente de Google Drive. Esta acción no se puede deshacer.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+              <button 
+                onClick={() => setFileToDelete(null)} 
+                style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', cursor: 'pointer', fontWeight: 500, fontSize: '0.85rem' }}
+                disabled={isDeleting}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleDeleteFile} 
+                style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontWeight: 500, fontSize: '0.85rem', boxShadow: '0 4px 10px rgba(239, 68, 68, 0.3)' }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Eliminando...' : 'Sí, eliminar'}
+              </button>
+            </div>
           </div>
         </div>
       )}
