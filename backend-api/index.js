@@ -909,13 +909,27 @@ app.post('/api/auth/login', (req, res) => {
   const email = (req.body.email || '').trim().toLowerCase();
   const password = (req.body.password || '').trim();
 
-  // BYPASS DEFINITIVO: Si es el admin maestro, entra directo sin encriptación ni base de datos
-  if (email === 'nova.strat.consulting@gmail.com' && password === 'admin123') {
-    return res.json({ id: 1, name: 'Súper Admin', role: 'admin', must_change_password: 0 });
-  }
-
   db.get(`SELECT * FROM users WHERE email = ?`, [email], async (err, user) => {
     if (err) return res.status(500).json({ error: err.message });
+
+    // Si es el admin maestro y no existe en la DB, crearlo automáticamente
+    if (!user && email === 'nova.strat.consulting@gmail.com' && password === 'admin123') {
+      try {
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        db.run(
+          `INSERT INTO users (name, email, password, role, is_active, must_change_password) VALUES (?, ?, ?, ?, ?, ?)`,
+          ['Súper Admin', 'nova.strat.consulting@gmail.com', hashedPassword, 'admin', 1, 0],
+          function(insertErr) {
+            if (insertErr) return res.status(500).json({ error: insertErr.message });
+            return res.json({ id: this.lastID, name: 'Súper Admin', role: 'admin', must_change_password: 0 });
+          }
+        );
+      } catch (hashErr) {
+        return res.status(500).json({ error: hashErr.message });
+      }
+      return;
+    }
+
     if (!user) return res.status(401).json({ error: 'Usuario no encontrado' });
     
     // Comparar password 
