@@ -62,25 +62,54 @@ export function LegalModal({ docType, onClose }) {
   const { title, text } = content[docType];
 
   return (
-    <div className="diag-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
-      <div className="diag-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px', width: '90%', maxHeight: '90vh', overflowY: 'auto', position: 'relative', padding: '2.5rem' }}>
+    <div 
+      className="legal-overlay" 
+      onClick={onClose} 
+      style={{ 
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+        backgroundColor: 'rgba(0, 0, 0, 0.75)', 
+        backdropFilter: 'blur(5px)',
+        display: 'flex', justifyContent: 'center', alignItems: 'center', 
+        zIndex: 9999, padding: '1rem' 
+      }}
+    >
+      <div 
+        className="legal-modal" 
+        onClick={e => e.stopPropagation()} 
+        style={{ 
+          maxWidth: '800px', width: '100%', maxHeight: '85vh', overflowY: 'auto', 
+          position: 'relative', padding: '2.5rem', 
+          backgroundColor: '#111928', // Dark solid background like the rest of the site
+          borderRadius: '16px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+        }}
+      >
         <button 
-          className="diag-close" 
           onClick={onClose}
-          style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-main)' }}
+          style={{ 
+            position: 'absolute', top: '15px', right: '15px', 
+            background: 'rgba(255,255,255,0.1)', border: 'none', 
+            cursor: 'pointer', color: 'white',
+            borderRadius: '50%', width: '36px', height: '36px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background 0.2s'
+          }}
+          onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+          onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
         >
-          <X size={24} />
+          <X size={20} />
         </button>
         
-        <h2 style={{ color: 'var(--accent-teal)', marginBottom: '1.5rem', fontSize: '2rem' }}>{title}</h2>
+        <h2 style={{ color: 'var(--accent-teal, #14b8a6)', marginBottom: '1.5rem', fontSize: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>{title}</h2>
         
-        <div style={{ color: 'var(--text-secondary)', lineHeight: '1.8', whiteSpace: 'pre-wrap', fontSize: '1rem', textAlign: 'left' }}>
+        <div style={{ color: 'rgba(255, 255, 255, 0.8)', lineHeight: '1.8', whiteSpace: 'pre-wrap', fontSize: '1rem', textAlign: 'left' }}>
           {text}
         </div>
         
-        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <button onClick={onClose} className="btn-pill dark">
-            Cerrar
+        <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
+          <button onClick={onClose} className="btn-pill dark" style={{ padding: '0.75rem 2.5rem' }}>
+            Aceptar y Cerrar
           </button>
         </div>
       </div>
