@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nova-strat-v3'; // Incremented version to force update and cache offline.html
+const CACHE_NAME = 'nova-strat-v4'; // Incremented version to force update and cache offline.html
 const urlsToCache = [
   '/',
   '/index.html',
