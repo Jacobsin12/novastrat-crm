@@ -30,7 +30,7 @@ npm run build
 echo "🚀 Levantando Backend API con PM2..."
 cd /var/www/novastrat/backend-api
 pm2 delete novastrat-api 2>/dev/null || true
-pm2 start index.js --name "novastrat-api" -i max
+pm2 start index.js --name "novastrat-api"
 pm2 save
 
 # 4. Configurar Nginx
