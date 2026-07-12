@@ -878,10 +878,9 @@ export default function Dashboard() {
                                       </button>
                                     </div>
                                   )}
-                                </div>
-
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                  {m.status === 'accepted' && m.meet_link && (
+                                  
+                                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                                    {m.status === 'accepted' && m.meet_link && (
                                     <a 
                                       href={m.meet_link} 
                                       target="_blank" 
@@ -917,6 +916,7 @@ export default function Dashboard() {
                                   </button>
                                 </div>
                               </div>
+                            </div>
                             );
                           })}
                         </div>
@@ -1164,7 +1164,7 @@ export default function Dashboard() {
           )}
 
           {user.role !== 'client' && (
-            <div className="card glass-panel col-span-2">
+            <div className="card glass-panel col-span-4">
               <h3 style={{marginBottom: '1.5rem', color: 'var(--color-text-main)', fontSize: '1.25rem'}}>Actividad Reciente</h3>
               <ul className="activity-list">
                 {stats.recentActivity && stats.recentActivity.length > 0 ? (
