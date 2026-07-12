@@ -896,30 +896,34 @@ export default function Dashboard() {
               <div className="card glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Users size={18} color="var(--color-accent)" />
-                  <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Tu Consultor</h4>
+                  <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Tu Equipo</h4>
                 </div>
                 
-                {clientProject && clientProject.consultant_name ? (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
-                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-teal) 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', boxShadow: 'var(--neumorphic-shadow)' }}>
-                        {clientProject.consultant_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                {clientProject && clientProject.consultants && clientProject.consultants.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+                    {clientProject.consultants.map((consultant) => (
+                      <div key={consultant.id} style={{ border: '1px solid var(--color-border)', borderRadius: '12px', padding: '1rem', background: 'var(--color-bg-card-inner)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-teal) 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', boxShadow: 'var(--neumorphic-shadow)', flexShrink: 0 }}>
+                            {consultant.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <h5 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--color-text-main)' }}>{consultant.name}</h5>
+                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Asesor NovaStrat</p>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                          <a href={`mailto:${consultant.email}`} className="btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.4rem', borderRadius: '6px', border: '1px solid var(--color-border)', color: 'var(--color-text-main)' }} title={`Enviar correo a ${consultant.email}`}><Mail size={14} /></a>
+                          {consultant.phone && (
+                            <>
+                              <a href={`tel:${consultant.phone}`} className="btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.4rem', borderRadius: '6px', border: '1px solid var(--color-border)', color: 'var(--color-text-main)' }} title={`Llamar a ${consultant.phone}`}><PhoneCall size={14} /></a>
+                              <a href={`https://wa.me/${consultant.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.4rem', borderRadius: '6px', border: '1px solid #25d366', background: 'rgba(37, 211, 102, 0.05)', color: '#25d366' }} title="Enviar WhatsApp"><MessageCircle size={14} /></a>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <h5 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)' }}>{clientProject.consultant_name}</h5>
-                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Asesor NovaStrat</p>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                      <a href={`mailto:${clientProject.consultant_email}`} className="btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--color-border)', color: 'var(--color-text-main)' }} title={`Enviar correo a ${clientProject.consultant_email}`}><Mail size={16} /></a>
-                      {clientProject.consultant_phone && (
-                        <>
-                          <a href={`tel:${clientProject.consultant_phone}`} className="btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--color-border)', color: 'var(--color-text-main)' }} title={`Llamar a ${clientProject.consultant_phone}`}><PhoneCall size={16} /></a>
-                          <a href={`https://wa.me/${clientProject.consultant_phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', borderRadius: '8px', border: '1px solid #25d366', background: 'rgba(37, 211, 102, 0.05)', color: '#25d366' }} title="Enviar WhatsApp"><MessageCircle size={16} /></a>
-                        </>
-                      )}
-                    </div>
-                  </>
+                    ))}
+                  </div>
                 ) : (
                   <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
@@ -927,12 +931,12 @@ export default function Dashboard() {
                         ?
                       </div>
                       <div>
-                        <h5 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)' }}>Sin asesor asignado</h5>
+                        <h5 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)' }}>Sin asesores asignados</h5>
                         <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Pendiente de asignación</p>
                       </div>
                     </div>
                     <div style={{ padding: '0.5rem 0', fontSize: '0.75rem', color: 'var(--color-text-muted)', textAlign: 'center', borderTop: '1px solid var(--color-border)', marginTop: '0.5rem' }}>
-                      Te notificaremos cuando se te asigne un consultor.
+                      Te notificaremos cuando se asigne un equipo a tu proyecto.
                     </div>
                   </>
                 )}

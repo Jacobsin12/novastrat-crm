@@ -993,6 +993,38 @@ app.put('/api/auth/change-password', async (req, res) => {
   }
 });
 
+// Editar perfil de administrador
+app.put('/api/users/admin/profile', (req, res) => {
+  const { userId, name, email, phone } = req.body;
+  
+  // Solo verificar que se estén enviando los datos básicos
+  if (!name || !email) {
+    return res.status(400).json({ error: 'Nombre y correo son requeridos.' });
+  }
+
+  // Verificar que el usuario sea realmente un admin
+  db.get(`SELECT role FROM users WHERE id = ?`, [userId], (err, user) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'No tienes permisos para realizar esta acción.' });
+    }
+
+    db.run(
+      `UPDATE users SET name = ?, email = ?, phone = ? WHERE id = ?`,
+      [name, email, phone, userId],
+      function (err) {
+        if (err) {
+          if (err.message.includes('UNIQUE constraint failed')) {
+            return res.status(400).json({ error: 'El correo electrónico ya está en uso por otra cuenta.' });
+          }
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: 'Perfil actualizado correctamente.' });
+      }
+    );
+  });
+});
+
 // Cambio de contraseña voluntario desde Configuración
 app.put('/api/users/change-password-settings', async (req, res) => {
   const { userId, currentPassword, newPassword } = req.body;
@@ -1421,7 +1453,7 @@ app.post('/api/users/clients/:clientId/assign-consultants', (req, res) => {
         
         // Notificación Push al cliente
         try {
-          sendPushNotificationToUser(clientId, 'Equipo Actualizado', 'Se ha actualizado tu equipo de asesores para el proyecto.', '/team');
+          sendPushNotificationToUser(clientId, 'Equipo Actualizado', 'Se ha actualizado tu equipo de asesores para el proyecto.', '/dashboard');
         } catch (e) {
           console.error('Error enviando push por asignación de consultores:', e.message);
         }

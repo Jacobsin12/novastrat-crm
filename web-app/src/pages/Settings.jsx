@@ -11,6 +11,13 @@ export default function Settings() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [emailEnabled, setEmailEnabled] = useState(true);
 
+  // Estados para edición de perfil (solo admin)
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
   // Estados para cambio de contraseña
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -34,6 +41,39 @@ export default function Settings() {
     if (/[0-9]/.test(pwd)) score += 25;
     if (/[^A-Za-z0-9]/.test(pwd)) score += 25;
     return score;
+  };
+
+  const handleEditProfile = async (e) => {
+    e.preventDefault();
+    setIsSavingProfile(true);
+    const toastId = toast.loading('Guardando perfil...');
+
+    try {
+      const response = await fetch(`${API_BASE}/api/users/admin/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          name: editName,
+          email: editEmail,
+          phone: editPhone
+        })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        toast.success('¡Perfil actualizado correctamente!', { id: toastId });
+        setIsEditProfileModalOpen(false);
+        const updatedUser = { ...user, name: editName, email: editEmail, phone: editPhone };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      } else {
+        toast.error(data.error || 'Error al actualizar perfil.', { id: toastId });
+      }
+    } catch (err) {
+      toast.error('Error de red al actualizar perfil.', { id: toastId });
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const handleChangePassword = async (e) => {
@@ -271,6 +311,23 @@ export default function Settings() {
                   <span style={{ display: 'inline-block', background: 'rgba(20, 184, 166, 0.1)', color: 'var(--color-accent-teal)', padding: '0.4rem 1rem', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'capitalize', border: '1px solid rgba(20, 184, 166, 0.2)' }}>
                     Rol: {user.role === 'admin' ? 'Administrador' : user.role === 'consultant' ? 'Consultor' : 'Cliente'}
                   </span>
+                  
+                  {user.role === 'admin' && (
+                    <div style={{ marginTop: '1.5rem' }}>
+                      <button 
+                        onClick={() => {
+                          setEditName(user.name || '');
+                          setEditEmail(user.email || '');
+                          setEditPhone(user.phone || '');
+                          setIsEditProfileModalOpen(true);
+                        }}
+                        className="btn-secondary" 
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                      >
+                        Editar Perfil
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -393,6 +450,38 @@ export default function Settings() {
           </div>
 
         </div>
+
+      {/* EDIT PROFILE MODAL */}
+      {isEditProfileModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', padding: '2rem', background: 'var(--color-bg-overlay)' }}>
+            <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--color-text-main)', marginBottom: '1.5rem' }}>Editar Perfil</h3>
+            <form onSubmit={handleEditProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-main)', fontWeight: 500 }}>Nombre Completo</label>
+                <input required type="text" value={editName} onChange={e => setEditName(e.target.value)} style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none' }} placeholder="Tu nombre" />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-main)', fontWeight: 500 }}>Correo Electrónico</label>
+                <input required type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none' }} placeholder="tu@correo.com" />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-main)', fontWeight: 500 }}>Teléfono</label>
+                <input required type="tel" value={editPhone} onChange={e => setEditPhone(e.target.value)} style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none' }} placeholder="+52 123 456 7890" />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem' }}>
+                <button type="button" onClick={() => setIsEditProfileModalOpen(false)} style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text-main)', cursor: 'pointer', fontWeight: 500 }}>Cancelar</button>
+                <button type="submit" className="btn-primary" style={{ padding: '0.75rem 1.5rem' }} disabled={isSavingProfile}>
+                  {isSavingProfile ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* PASSWORD CHANGE MODAL */}
       {isPasswordModalOpen && (
