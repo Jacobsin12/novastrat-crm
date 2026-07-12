@@ -93,7 +93,7 @@
 .team-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(11, 19, 32, 0.5);
+  background: rgba(11, 19, 32, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   z-index: 1000;

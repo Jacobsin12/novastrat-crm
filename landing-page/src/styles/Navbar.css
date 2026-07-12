@@ -79,7 +79,7 @@
   right: 0;
   bottom: 0;
   z-index: 40; /* Below the navbar (50) */
-  background: rgba(11, 19, 32, 0.5);
+  background: rgba(11, 19, 32, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
