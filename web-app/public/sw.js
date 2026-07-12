@@ -11,8 +11,8 @@ self.addEventListener('push', event => {
   const title = data.title || 'Nueva Notificación';
   const options = {
     body: data.body || 'Tienes una nueva actualización en NovaStrat.',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
+    icon: '/pwa-192x192.png',
+    badge: '/pwa-192x192.png',
     data: {
       url: data.url || '/dashboard'
     }
