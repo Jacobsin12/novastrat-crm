@@ -157,7 +157,7 @@ function initDB() {
     // 6. Seeder: Insertar un Admin por defecto si no hay usuarios
     db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
       if (row.count === 0) {
-        const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'admin@novastrat.com';
+        const adminEmail = process.env.DEFAULT_ADMIN_EMAIL || 'nova.strat.consulting@gmail.com';
         const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'admin123';
         
         const bcrypt = require('bcrypt');

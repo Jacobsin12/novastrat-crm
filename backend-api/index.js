@@ -912,12 +912,12 @@ app.post('/api/auth/login', (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
 
     // Si es el admin maestro y no existe en la DB, crearlo automáticamente
-    if (!user && email === 'admin@novastrat.com' && password === 'admin123') {
+    if (!user && email === 'nova.strat.consulting@gmail.com' && password === 'admin123') {
       try {
         const hashedPassword = await bcrypt.hash('admin123', 10);
         db.run(
           `INSERT INTO users (name, email, password, role, is_active, must_change_password) VALUES (?, ?, ?, ?, ?, ?)`,
-          ['Súper Admin', 'admin@novastrat.com', hashedPassword, 'admin', 1, 0],
+          ['Súper Admin', 'nova.strat.consulting@gmail.com', hashedPassword, 'admin', 1, 0],
           function(insertErr) {
             if (insertErr) return res.status(500).json({ error: insertErr.message });
             return res.json({ id: this.lastID, name: 'Súper Admin', role: 'admin', must_change_password: 0 });
