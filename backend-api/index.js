@@ -95,35 +95,7 @@ async function getOrCreateDriveFolderForCompany(companyName, emailToShare) {
 }
 
 async function createClientDriveFolder(companyName, clientEmail) {
-  const appsScriptUrl = process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.GOOGLE_APPS_SCRIPT_URL;
-  const isAppsScript = appsScriptUrl && appsScriptUrl.startsWith('https://script.google.com');
-
-  if (isAppsScript) {
-    try {
-      console.log(`[Google Drive API - Apps Script] Creando carpeta para la empresa "${companyName}"...`);
-      const response = await fetch(appsScriptUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'createFolder',
-          folderName: `NovaStrat - ${companyName}`,
-          emailToShare: clientEmail
-        })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          console.log(`[Google Drive API - Apps Script] Carpeta creada con éxito. ID: ${result.id}`);
-          return result.id;
-        } else {
-          console.error('[Google Drive API - Apps Script] Error retornado al crear carpeta:', result.error);
-        }
-      }
-    } catch (err) {
-      console.error('[Google Drive API - Apps Script] Error en petición de creación de carpeta:', err.message);
-    }
-  } else if (drive) {
+  if (drive) {
     try {
       const folderId = await getOrCreateDriveFolderForCompany(companyName, clientEmail);
       return folderId;
@@ -1653,47 +1625,7 @@ app.post('/api/documents', upload.single('file'), (req, res) => {
       let driveFileId = null;
       let driveWebViewLink = null;
 
-      const appsScriptUrl = process.env.GOOGLE_DRIVE_FOLDER_ID || process.env.GOOGLE_APPS_SCRIPT_URL;
-      const isAppsScript = appsScriptUrl && appsScriptUrl.startsWith('https://script.google.com');
-
-      if (isAppsScript) {
-        try {
-          console.log(`[Google Drive API - Apps Script] Iniciando carga de "${req.file.originalname}" a la carpeta "${company}"...`);
-          
-          // 1. Leer archivo y convertir a Base64
-          const fileBuffer = fs.readFileSync(req.file.path);
-          const base64File = fileBuffer.toString('base64');
-          
-          // 2. Enviar petición HTTP POST al script
-          const postRes = await fetch(appsScriptUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              fileName: req.file.originalname,
-              mimeType: req.file.mimetype,
-              base64: base64File,
-              folderId: folderId // Pass folder ID
-            })
-          });
-          
-          if (!postRes.ok) {
-            throw new Error(`Apps Script respondió con status: ${postRes.status}`);
-          }
-          
-          const scriptResult = await postRes.json();
-          if (scriptResult.success) {
-            driveFileId = scriptResult.id;
-            driveWebViewLink = scriptResult.link;
-            console.log(`[Google Drive API - Apps Script] Carga exitosa. ID: ${driveFileId}`);
-            console.log(`[Google Drive API - Apps Script] Enlace: ${driveWebViewLink}`);
-          } else {
-            throw new Error(scriptResult.error || 'Fallo desconocido en el script.');
-          }
-        } catch (scriptErr) {
-          console.error('[Google Drive API - Apps Script] Error al subir:', scriptErr.message);
-          driveWebViewLink = `https://drive.google.com/open?id=mock-drive-link-novastrat-${Date.now()}`;
-        }
-      } else if (drive) {
+      if (drive) {
         try {
           console.log(`[Google Drive API] Iniciando carga de "${req.file.originalname}"...`);
           
