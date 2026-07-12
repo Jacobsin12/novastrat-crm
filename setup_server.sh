@@ -3,18 +3,13 @@
 
 echo "🚀 Iniciando configuración del servidor NovaStrat (V2)..."
 
-# Validar que el zip exista
-if [ ! -f ~/novastrat_deploy.zip ]; then
-    echo "❌ ERROR FATAL: No se encuentra el archivo novastrat_deploy.zip."
-    echo "Asegúrate de haberlo subido usando el botón de 'Upload file' y que el nombre sea exactamente novastrat_deploy.zip"
+# 1. Validar que estamos en la carpeta correcta
+if [ ! -d "/var/www/novastrat/backend-api" ]; then
+    echo "❌ ERROR FATAL: El script debe ejecutarse desde /var/www/novastrat con el repositorio clonado."
     exit 1
 fi
 
-# 1. Descomprimir el proyecto (lo forzamos a estar en /var/www para evitar problemas de permisos o $USER)
-echo "📂 Preparando archivos del proyecto en /var/www/novastrat..."
-sudo mkdir -p /var/www/novastrat
-sudo unzip -o ~/novastrat_deploy.zip -d /var/www/novastrat
-sudo chown -R $USER:$USER /var/www/novastrat
+echo "🚀 Preparando dependencias (Versión Git)..."
 
 # 2. Instalar dependencias y compilar
 echo "⚙️ Instalando dependencias del Backend..."
