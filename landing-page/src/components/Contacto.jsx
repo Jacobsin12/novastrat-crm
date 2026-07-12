@@ -40,7 +40,7 @@ export function Contacto() {
         <h2>Hablemos</h2>
         <p className="contact-subtitle">¿Tienes alguna pregunta o quieres trabajar con nosotros? Escríbenos directamente por WhatsApp o envíanos un mensaje.</p>
         <div className="contact-actions">
-          <a href="https://wa.me/524423545498" target="_blank" rel="noreferrer" className="btn-whatsapp">
+          <a href="https://wa.me/5215656473672" target="_blank" rel="noreferrer" className="btn-whatsapp">
             <MessageCircle size={20} />
             Contáctanos por WhatsApp
           </a>
