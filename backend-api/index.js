@@ -135,7 +135,7 @@ webpush.setVapidDetails(
 );
 
 function sendPushNotification(title, body, url = '/dashboard') {
-  db.all(`SELECT id, endpoint, p256dh, auth FROM push_subscriptions`, [], (err, rows) => {
+  db.all(`SELECT p.id, p.endpoint, p.p256dh, p.auth FROM push_subscriptions p JOIN users u ON p.user_id = u.id WHERE u.role = 'admin'`, [], (err, rows) => {
     if (err) {
       console.error('Error fetching subscriptions for push:', err.message);
       return;
@@ -1299,6 +1299,18 @@ app.put('/api/projects/:id/stage', (req, res) => {
   
   db.run(`UPDATE projects SET stage = ? WHERE id = ?`, [stage, id], function(err) {
     if (err) return res.status(500).json({ error: err.message });
+    
+    // Notificación Push al cliente
+    db.get(`SELECT client_id FROM projects WHERE id = ?`, [id], (errProj, proj) => {
+      if (!errProj && proj && proj.client_id) {
+        try {
+          sendPushNotificationToUser(proj.client_id, 'Avance de Proyecto', `Tu proyecto ha cambiado a la etapa: ${stage}`, '/dashboard');
+        } catch (e) {
+          console.error('Error enviando push por cambio de etapa:', e.message);
+        }
+      }
+    });
+
     res.json({ message: 'Etapa actualizada correctamente', changes: this.changes });
   });
 });
@@ -1390,6 +1402,14 @@ app.post('/api/users/clients/:clientId/assign-consultants', (req, res) => {
       const mainConsultantId = consultantIds.length > 0 ? consultantIds[0] : null;
       db.run(`UPDATE projects SET consultant_id = ? WHERE id = ?`, [mainConsultantId, projectId], (err) => {
         if (err) return res.status(500).json({ error: err.message });
+        
+        // Notificación Push al cliente
+        try {
+          sendPushNotificationToUser(clientId, 'Equipo Actualizado', 'Se ha actualizado tu equipo de asesores para el proyecto.', '/team');
+        } catch (e) {
+          console.error('Error enviando push por asignación de consultores:', e.message);
+        }
+
         res.json({ message: 'Asesores asignados con éxito.' });
       });
     });
