@@ -488,6 +488,8 @@
   border: 1px solid rgba(0,0,0,0.08) !important;
   background: rgba(255,255,255,0.5) !important;
   height: 100%;
+  flex: 0 0 auto !important;
+  width: max-content !important;
 }
 .PhoneInputCountrySelect {
   display: none !important; /* Hide the native select completely */
