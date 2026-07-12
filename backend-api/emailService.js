@@ -175,9 +175,10 @@ function buildWelcomeEmailHTML({ name, role, email, tempPassword, loginUrl }) {
                   </tr>
                   <tr>
                     <td style="padding: 0;">
-                      <div style="background-color: #1d4ed8; color: #ffffff; font-size: 18px; font-weight: 700; padding: 12px 24px; border-radius: 10px; letter-spacing: 2px; display: inline-block; font-family: 'Courier New', monospace; box-shadow: 0 4px 10px rgba(29, 78, 216, 0.2);">
+                      <div style="background-color: #1d4ed8; color: #ffffff; font-size: 18px; font-weight: 700; padding: 12px 24px; border-radius: 10px; letter-spacing: 2px; display: inline-block; font-family: 'Courier New', monospace; box-shadow: 0 4px 10px rgba(29, 78, 216, 0.2); user-select: all; -webkit-user-select: all; cursor: pointer;">
                         ${tempPassword}
                       </div>
+                      <p style="color: #64748b; font-size: 11px; text-transform: uppercase; margin: 8px 0 0 0; letter-spacing: 1px;">(Selecciona y copia la clave)</p>
                     </td>
                   </tr>
                 </table>
@@ -232,7 +233,7 @@ function buildWelcomeEmailHTML({ name, role, email, tempPassword, loginUrl }) {
  * @param {string} loginUrl - URL del login de la web app
  * @returns {Promise<{success: boolean, previewUrl?: string, error?: string}>}
  */
-async function sendWelcomeEmail(to, name, role, tempPassword, loginUrl = 'http://localhost:5174/login') {
+async function sendWelcomeEmail(to, name, role, tempPassword, loginUrl = 'https://novastratmx.com/app/login') {
   try {
     const transport = await getTransporter();
 
@@ -550,9 +551,10 @@ function buildPasswordRecoveryEmailHTML({ name, tempPassword, loginUrl }) {
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 1.5 1.5M15.5 7.5 14 6"/></svg>
                   Tu Contraseña Temporal
                 </h3>
-                <div style="background-color: #1d4ed8; color: #ffffff; font-size: 18px; font-weight: 700; padding: 12px 24px; border-radius: 10px; letter-spacing: 2px; display: inline-block; font-family: 'Courier New', monospace; box-shadow: 0 4px 10px rgba(29, 78, 216, 0.2);">
+                <div style="background-color: #1d4ed8; color: #ffffff; font-size: 18px; font-weight: 700; padding: 12px 24px; border-radius: 10px; letter-spacing: 2px; display: inline-block; font-family: 'Courier New', monospace; box-shadow: 0 4px 10px rgba(29, 78, 216, 0.2); user-select: all; -webkit-user-select: all; cursor: pointer;">
                   ${tempPassword}
                 </div>
+                <p style="color: #64748b; font-size: 11px; text-transform: uppercase; margin: 8px 0 0 0; letter-spacing: 1px;">(Selecciona y copia la clave)</p>
               </div>
 
               <!-- AVISO IMPORTANTE -->
@@ -594,7 +596,7 @@ function buildPasswordRecoveryEmailHTML({ name, tempPassword, loginUrl }) {
   `;
 }
 
-async function sendPasswordRecoveryEmail(to, name, tempPassword, loginUrl = 'http://localhost:5174/login') {
+async function sendPasswordRecoveryEmail(to, name, tempPassword, loginUrl = 'https://novastratmx.com/app/login') {
   try {
     const transport = await getTransporter();
     const subject = '🔒 Recuperación de Contraseña - Clave Temporal NovaStrat';
