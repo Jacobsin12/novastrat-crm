@@ -5,7 +5,9 @@ import toast from 'react-hot-toast';
 import '../styles/Login.css';
 
 export default function Login() {
-  const landingUrl = import.meta.env.VITE_LANDING_PAGE_URL || (window.location.origin.includes('5173') ? window.location.origin.replace('5173', '5174') : 'http://localhost:5174');
+  const landingUrl = import.meta.env.VITE_LANDING_PAGE_URL && import.meta.env.VITE_LANDING_PAGE_URL !== 'http://localhost:5174' 
+    ? import.meta.env.VITE_LANDING_PAGE_URL 
+    : (window.location.origin.includes('localhost') ? 'http://localhost:5174' : window.location.origin);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
