@@ -1343,9 +1343,14 @@ app.get('/api/projects', (req, res) => {
 // Actualizar la etapa (columna) de un proyecto al arrastrarlo
 app.put('/api/projects/:id/stage', (req, res) => {
   const { id } = req.params;
-  const { stage } = req.body;
+  const { stage, description } = req.body;
   
-  db.run(`UPDATE projects SET stage = ? WHERE id = ?`, [stage, id], function(err) {
+  const query = description !== undefined 
+    ? `UPDATE projects SET stage = ?, description = ? WHERE id = ?` 
+    : `UPDATE projects SET stage = ? WHERE id = ?`;
+  const params = description !== undefined ? [stage, description, id] : [stage, id];
+  
+  db.run(query, params, function(err) {
     if (err) return res.status(500).json({ error: err.message });
     
     // Notificación Push al cliente

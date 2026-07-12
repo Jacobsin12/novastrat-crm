@@ -14,6 +14,9 @@ export default function Pipeline() {
   const [cards, setCards] = useState([]);
   const [draggedCard, setDraggedCard] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [pendingStageChange, setPendingStageChange] = useState(null);
+  const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [stageDescription, setStageDescription] = useState('');
 
   const fetchProjects = async () => {
     try {
@@ -62,29 +65,60 @@ export default function Pipeline() {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = async (e, status) => {
+  const handleDrop = (e, status) => {
     e.preventDefault();
     if (draggedCard && draggedCard.stage !== status) {
-      const updatedCards = cards.map(c => 
-        c.id === draggedCard.id ? { ...c, stage: status } : c
-      );
-      setCards(updatedCards);
-      
-      try {
-        const response = await fetch(`${API_BASE}/api/projects/${draggedCard.id}/stage`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ stage: status })
-        });
-        if (!response.ok) {
-          console.error('Error updating stage on server');
-          fetchProjects(); // Revert
-        }
-      } catch (err) {
-        console.error('Connection error updating stage:', err);
-        fetchProjects(); // Revert
-      }
+      setPendingStageChange({ card: draggedCard, newStage: status });
+      setStageDescription('');
+      setIsDescriptionModalOpen(true);
     }
+  };
+
+  const confirmStageChange = async () => {
+    if (!pendingStageChange || !stageDescription.trim()) {
+      alert('Debes ingresar una descripción de lo que se hizo para avanzar.');
+      return;
+    }
+    
+    const { card, newStage } = pendingStageChange;
+    
+    // Optimistic UI update
+    const updatedCards = cards.map(c => 
+      c.id === card.id ? { ...c, stage: newStage } : c
+    );
+    setCards(updatedCards);
+    setIsDescriptionModalOpen(false);
+    
+    // Format timestamp
+    const nowStr = new Date().toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const newDescription = (card.description ? card.description + '\n\n' : '') + 
+      `[${nowStr} - Cambio a '${newStage}']:\n${stageDescription.trim()}`;
+      
+    try {
+      const response = await fetch(`${API_BASE}/api/projects/${card.id}/stage`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: newStage, description: newDescription })
+      });
+      if (!response.ok) {
+        console.error('Error updating stage on server');
+        fetchProjects(); // Revert
+      } else {
+        fetchProjects(); // To get the updated description fully
+      }
+    } catch (err) {
+      console.error('Connection error updating stage:', err);
+      fetchProjects(); // Revert
+    }
+    
+    setPendingStageChange(null);
+    setStageDescription('');
+  };
+  
+  const cancelStageChange = () => {
+    setIsDescriptionModalOpen(false);
+    setPendingStageChange(null);
+    setStageDescription('');
   };
 
   const formatDate = (dateStr) => {
@@ -200,6 +234,39 @@ export default function Pipeline() {
                   {selectedCard.description || 'El consultor aún no ha agregado una descripción detallada del avance del proyecto.'}
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isDescriptionModalOpen && pendingStageChange && (
+        <div className="modal-overlay" onClick={cancelStageChange}>
+          <div className="modal-content glass-panel" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header" style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Descripción de Avance</h3>
+              <button onClick={cancelStageChange} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={20} /></button>
+            </div>
+            
+            <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+              Para mover el proyecto a <strong>"{pendingStageChange.newStage}"</strong>, es obligatorio ingresar una descripción de lo que se hizo.
+            </p>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <textarea 
+                value={stageDescription}
+                onChange={(e) => setStageDescription(e.target.value)}
+                placeholder="Ej. Se finalizó el análisis financiero y se presentó el reporte..."
+                style={{ width: '100%', minHeight: '120px', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', fontSize: '0.9rem', resize: 'vertical' }}
+              />
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button className="btn-secondary" onClick={cancelStageChange} style={{ padding: '0.6rem 1.25rem' }}>
+                Cancelar
+              </button>
+              <button className="btn-primary" onClick={confirmStageChange} disabled={!stageDescription.trim()} style={{ padding: '0.6rem 1.25rem', opacity: stageDescription.trim() ? 1 : 0.5, cursor: stageDescription.trim() ? 'pointer' : 'not-allowed' }}>
+                Guardar y Mover
+              </button>
             </div>
           </div>
         </div>
