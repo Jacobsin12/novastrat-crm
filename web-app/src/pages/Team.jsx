@@ -32,13 +32,13 @@ export default function Team() {
 
   useEffect(() => {
     if (selectedClient) {
-      // 1. Cargar todos los consultores activos
-      fetch(`${API_BASE}/api/users/consultants`)
+      // 1. Cargar todos los asesores y administradores activos para asignación
+      fetch(`${API_BASE}/api/users/staff`)
         .then(res => res.json())
         .then(data => {
           setAllConsultants(data.filter(c => c.is_active === 1));
         })
-        .catch(err => console.error('Error fetching active consultants:', err));
+        .catch(err => console.error('Error fetching active staff:', err));
 
       // 2. Cargar IDs de consultores actualmente asignados a este cliente
       fetch(`${API_BASE}/api/users/clients/${selectedClient.id}/consultants`)
@@ -549,10 +549,10 @@ export default function Team() {
 
               <div style={{ marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
-                  Asignar Consultores/Asesores Activos
+                  Asignar Equipo al Proyecto (Administradores y Asesores)
                 </span>
                 {allConsultants.length === 0 ? (
-                  <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: 0 }}>No hay consultores activos disponibles.</p>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: 0 }}>No hay equipo disponible para asignar.</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '150px', overflowY: 'auto', background: 'var(--color-bg-card-inner)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
                     {allConsultants.map(c => {
@@ -571,7 +571,10 @@ export default function Team() {
                             }}
                             style={{ width: '16px', height: '16px', accentColor: 'var(--color-accent-teal)' }}
                           />
-                          <span>{c.name} ({c.email})</span>
+                          <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span>{c.name} {c.role === 'admin' ? '(Admin)' : ''}</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{c.email}</span>
+                          </div>
                         </label>
                       );
                     })}

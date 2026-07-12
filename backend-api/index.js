@@ -1098,6 +1098,14 @@ app.get('/api/users/consultants', (req, res) => {
   });
 });
 
+// Obtener todos los consultores y administradores (Para asignación)
+app.get('/api/users/staff', (req, res) => {
+  db.all(`SELECT id, name, email, role, is_active, phone, created_at FROM users WHERE role IN ('consultant', 'admin') ORDER BY created_at DESC`, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
 // Alta de un nuevo Consultor (Solo para Admin)
 app.post('/api/users/consultants', async (req, res) => {
   const { name, email, rawPassword, phone } = req.body;
