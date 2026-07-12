@@ -947,7 +947,7 @@ app.post('/api/auth/login', (req, res) => {
 
 // Recuperar contraseña (Olvidé mi contraseña)
 app.post('/api/auth/forgot-password', (req, res) => {
-  const { email } = req.body;
+  const email = (req.body.email || '').trim().toLowerCase();
   if (!email) return res.status(400).json({ error: 'Se requiere el correo electrónico.' });
   
   db.get(`SELECT id, name, email FROM users WHERE email = ? AND is_active = 1`, [email], async (err, user) => {
