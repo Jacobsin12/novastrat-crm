@@ -16,6 +16,16 @@ function App() {
   const [activeSection, setActiveSection] = useState('');
   const [legalDoc, setLegalDoc] = useState(null);
 
+  // Check if running as PWA and user is logged in, redirect to dashboard
+  useEffect(() => {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const storedUser = localStorage.getItem('user');
+    if (isStandalone && storedUser) {
+      const webAppUrl = import.meta.env.VITE_WEB_APP_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5173' : window.location.origin + '/app');
+      window.location.href = `${webAppUrl}/login`;
+    }
+  }, []);
+
   // Automatically open the diagnostic modal if coming from the login registration link
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
