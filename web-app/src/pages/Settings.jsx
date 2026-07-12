@@ -177,7 +177,7 @@ export default function Settings() {
     if (!pushEnabled) {
       // Request permission
       if (!('Notification' in window)) {
-        alert('Este navegador no soporta notificaciones de escritorio.');
+        toast.error('Tu dispositivo no soporta notificaciones web. En iPhone, intenta "Agregar a Inicio" esta página.');
         return;
       }
       const permission = await Notification.requestPermission();
@@ -189,7 +189,7 @@ export default function Settings() {
           icon: '/vite.svg'
         });
       } else {
-        alert('Permiso de notificaciones denegado. Habilítalo desde la configuración de tu navegador.');
+        toast.error('Permiso denegado. Habilítalo desde la configuración de tu navegador.');
       }
     } else {
       // "Disable" logic (visually, since we can't un-grant permission via JS)
