@@ -30,16 +30,15 @@ function App() {
           <div
             className="premium-toast"
             style={{
-              background: 'var(--color-bg-card, rgba(255, 255, 255, 0.95))',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid var(--color-border, rgba(0, 0, 0, 0.05))',
-              borderRadius: '20px',
-              padding: '16px',
-              boxShadow: '0 15px 35px rgba(0, 0, 0, 0.1), 0 3px 10px rgba(0, 0, 0, 0.05)',
+              background: '#ffffff',
+              border: '1px solid rgba(0, 0, 0, 0.05)',
+              borderRadius: '12px',
+              padding: '12px 16px',
+              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)',
               display: 'flex',
-              alignItems: 'flex-start',
+              alignItems: 'center',
               gap: '12px',
-              width: '360px',
+              width: '340px',
               position: 'relative',
               pointerEvents: 'auto',
               fontFamily: 'Inter, system-ui, sans-serif',
@@ -50,31 +49,30 @@ function App() {
           >
             {/* Icono de app izquierdo */}
             <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
               background: t.type === 'error' ? '#ef4444' : '#0f172a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#fff',
-              fontSize: '1.2rem',
+              fontSize: '1rem',
               fontWeight: 'bold',
-              flexShrink: 0,
-              boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)'
+              flexShrink: 0
             }}>
-              {t.type === 'error' ? '✕' : 'N'}
+              {t.type === 'error' ? '!' : 'N'}
             </div>
 
             {/* Contenido principal */}
-            <div style={{ flex: 1, paddingRight: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
-                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-text-main, #0f172a)' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem', color: '#0f172a' }}>
                   {t.type === 'error' ? 'Error' : 'Nova Strat'}
                 </span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, #94a3b8)' }}>ahora</span>
+                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>ahora</span>
               </div>
-              <p style={{ margin: 0, fontSize: '0.825rem', color: 'var(--color-text-muted, #475569)', lineHeight: 1.4, fontWeight: 500 }}>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', lineHeight: 1.4 }}>
                 {typeof t.message === 'function' ? t.message(t) : t.message}
               </p>
             </div>
@@ -85,22 +83,20 @@ function App() {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: 'var(--color-text-muted, #94a3b8)',
+                color: '#94a3b8',
                 cursor: 'pointer',
                 padding: '4px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: '50%',
-                transition: 'all 0.2s',
-                marginTop: '-2px',
-                fontSize: '0.8rem',
-                fontWeight: 'bold'
+                transition: 'color 0.2s',
+                fontSize: '1rem',
+                marginLeft: '4px'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-bg-card-inner, rgba(0,0,0,0.05))'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
             >
-              ✕
+              ×
             </button>
           </div>
         )}
