@@ -220,7 +220,7 @@ export default function Settings() {
           
           new Notification('¡Notificaciones Activadas!', {
             body: 'Recibirás alertas importantes aquí.',
-            icon: '/favicon.ico'
+            icon: './pwa-192x192.png'
           });
         } catch (error) {
           console.error(error);

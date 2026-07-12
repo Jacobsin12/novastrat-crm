@@ -42,7 +42,7 @@ export default function Layout() {
     // El registro del Service Worker se mantiene para poder recibir pushes, 
     // pero la suscripción explícita ahora se hace desde Settings.jsx para cumplir con iOS.
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('./sw.js')
         .then(reg => {
           console.log('Service Worker registrado:', reg.scope);
         })
