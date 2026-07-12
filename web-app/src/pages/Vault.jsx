@@ -102,47 +102,58 @@ function SimpleVault({ user }) {
 
   const handleUploadToFolder = async (e) => {
     e.preventDefault();
-    if (!fileToUpload || !currentFolder) return;
+    if (filesToUpload.length === 0 || !currentFolder) return;
     setIsUploading(true);
-    const toastId = toast.loading('Subiendo a Google Drive...');
-    const formData = new FormData();
-    formData.append('file', fileToUpload);
-    formData.append('uploaded_by', user.id);
-    if (currentFolder.clientId) formData.append('clientId', currentFolder.clientId);
+    const toastId = toast.loading(`Subiendo ${filesToUpload.length} archivo(s)...`);
     
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/drive/folders/${currentFolder.folderId}/upload`, { method: 'POST', body: formData });
-      if (res.ok) {
-        const data = await res.json();
-        
-        if (data.drive_synced === false) {
-          toast.error(`Guardado localmente, pero falló en Drive: ${data.error || 'Sin cuota'}`, { id: toastId });
-          setFileToUpload(null);
-          return;
+    let successCount = 0;
+    const newFilesList = [];
+    
+    for (const file of filesToUpload) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('uploaded_by', user.id);
+      if (currentFolder.clientId) formData.append('clientId', currentFolder.clientId);
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/drive/folders/${currentFolder.folderId}/upload`, { method: 'POST', body: formData });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.drive_synced !== false) {
+            successCount++;
+            newFilesList.push({
+              id: data.driveFileId,
+              name: file.name,
+              mimeType: file.type || 'application/octet-stream',
+              size: file.size,
+              modifiedTime: new Date().toISOString(),
+              webViewLink: data.webViewLink,
+              uploadedBy: user.id,
+              uploaderName: user.name || 'Tú',
+              source: 'drive'
+            });
+          }
         }
-
-        toast.success('Archivo subido correctamente', { id: toastId });
-        setFileToUpload(null);
-        
-        const newFile = {
-          id: data.driveFileId,
-          name: fileToUpload.name,
-          mimeType: fileToUpload.type || 'application/octet-stream',
-          size: fileToUpload.size,
-          modifiedTime: new Date().toISOString(),
-          webViewLink: data.webViewLink,
-          uploadedBy: user.id,
-          uploaderName: user.name || 'Tú',
-          source: 'drive'
-        };
-        setDriveFiles(prev => [newFile, ...prev]);
-        fetchDocuments(); // Refresh local list too
-        
-        // Fetch para sincronizar después de un tiempo
-        setTimeout(() => fetchDriveFiles(currentFolder.folderId), 3000);
-      } else { toast.error('Error al subir archivo', { id: toastId }); }
-    } catch (err) { toast.error('Error de conexión', { id: toastId }); }
-    finally { setIsUploading(false); }
+      } catch (err) {
+        console.error('Error de conexión:', err);
+      }
+    }
+    
+    if (successCount === filesToUpload.length) {
+      toast.success(`¡Se subieron ${successCount} archivos correctamente!`, { id: toastId });
+    } else if (successCount > 0) {
+      toast.error(`Se subieron ${successCount} de ${filesToUpload.length} archivos`, { id: toastId });
+    } else {
+      toast.error('Error al subir los archivos', { id: toastId });
+    }
+    
+    setFilesToUpload([]);
+    if (newFilesList.length > 0) {
+      setDriveFiles(prev => [...newFilesList, ...prev]);
+      fetchDocuments();
+      setTimeout(() => fetchDriveFiles(currentFolder.folderId), 3000);
+    }
+    setIsUploading(false);
   };
 
   return (
@@ -168,24 +179,32 @@ function SimpleVault({ user }) {
             <UploadCloud size={32} color="var(--color-accent-teal)" />
           </div>
           <h2 className="title-glass" style={{ fontSize: '1.25rem', marginBottom: '0.5rem', textAlign: 'center' }}>Subir archivo a tu Bóveda</h2>
-          <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', textAlign: 'center', fontSize: '0.9rem' }}>Formatos soportados: PNG, JPG, TXT, PDF, Excel, Word (Max 10MB)</p>
+          <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', textAlign: 'center', fontSize: '0.9rem' }}>Formatos soportados: PNG, JPG, TXT, PDF, Excel, Word (Max 10MB c/u)</p>
           <form onSubmit={handleUploadToFolder} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', width: '100%', maxWidth: '300px' }}>
             <div style={{ display: 'flex', gap: '0.5rem', width: '100%', alignItems: 'center' }}>
               <label style={{ flex: 1, cursor: 'pointer', padding: '0.85rem 1.5rem', borderRadius: '12px', background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-main)', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: 'var(--neumorphic-shadow)', transition: 'all 0.2s' }}>
                 <File size={18} color="var(--color-accent-teal)" />
                 <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>
-                  {fileToUpload ? fileToUpload.name : 'Seleccionar Archivo'}
+                  {filesToUpload.length > 0 ? (filesToUpload.length === 1 ? filesToUpload[0].name : `${filesToUpload.length} archivos seleccionados`) : 'Seleccionar (Max 5)'}
                 </span>
-                <input type="file" accept=".png,.jpg,.jpeg,.txt,.pdf,.xls,.xlsx,.doc,.docx" onChange={(e) => setFileToUpload(e.target.files[0])} style={{ display: 'none' }} />
+                <input type="file" multiple accept=".png,.jpg,.jpeg,.txt,.pdf,.xls,.xlsx,.doc,.docx" onChange={(e) => {
+                  const selected = Array.from(e.target.files);
+                  if (selected.length > 5) {
+                    toast.error('Solo puedes subir hasta 5 archivos a la vez');
+                    setFilesToUpload(selected.slice(0, 5));
+                  } else {
+                    setFilesToUpload(selected);
+                  }
+                }} style={{ display: 'none' }} />
               </label>
-              {fileToUpload && (
-                <button type="button" onClick={() => setFileToUpload(null)} title="Quitar archivo" style={{ padding: '0.85rem', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {filesToUpload.length > 0 && (
+                <button type="button" onClick={() => setFilesToUpload([])} title="Quitar archivos" style={{ padding: '0.85rem', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Trash2 size={18} />
                 </button>
               )}
             </div>
-            <button type="submit" className="btn-primary" disabled={!fileToUpload || isUploading} style={{ opacity: (!fileToUpload || isUploading) ? 0.5 : 1, width: '100%', padding: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-              {isUploading ? 'Subiendo a la Bóveda...' : 'Subir a Bóveda'}
+            <button type="submit" className="btn-primary" disabled={filesToUpload.length === 0 || isUploading} style={{ opacity: (filesToUpload.length === 0 || isUploading) ? 0.5 : 1, width: '100%', padding: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+              {isUploading ? 'Subiendo...' : 'Subir a Bóveda'}
             </button>
           </form>
         </div>
@@ -289,7 +308,7 @@ function AdminVault({ user }) {
   const [loadingFolders, setLoadingFolders] = useState(true);
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [fileToUpload, setFileToUpload] = useState(null);
+  const [filesToUpload, setFilesToUpload] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
