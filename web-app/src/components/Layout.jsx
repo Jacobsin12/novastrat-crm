@@ -39,39 +39,15 @@ export default function Layout() {
   useEffect(() => {
     if (!user) return;
     
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
+    // El registro del Service Worker se mantiene para poder recibir pushes, 
+    // pero la suscripción explícita ahora se hace desde Settings.jsx para cumplir con iOS.
+    if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
         .then(reg => {
           console.log('Service Worker registrado:', reg.scope);
-          
-          return Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-              return fetch(`${API_BASE}/api/vapid-public-key`)
-                .then(res => res.json())
-                .then(data => {
-                  const applicationServerKey = urlBase64ToUint8Array(data.publicKey);
-                  
-                  return reg.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: applicationServerKey
-                  }).then(subscription => {
-                    return fetch(`${API_BASE}/api/push-subscribe`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        subscription: subscription.toJSON(),
-                        userId: user.id
-                      })
-                    });
-                  });
-                });
-            } else {
-              console.warn('Permiso de notificaciones push rechazado por el usuario.');
-            }
-          });
         })
         .catch(err => {
-          console.error('Error registrando o suscribiendo a Notificaciones Push:', err);
+          console.error('Error registrando Service Worker:', err);
         });
     }
   }, [user]);

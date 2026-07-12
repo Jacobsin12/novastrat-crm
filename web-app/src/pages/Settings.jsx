@@ -173,28 +173,73 @@ export default function Settings() {
     }
   }, [navigate]);
 
+  const urlBase64ToUint8Array = (base64String) => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
   const handlePushToggle = async () => {
     if (!pushEnabled) {
       // Request permission
-      if (!('Notification' in window)) {
+      if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
         toast.error('Tu dispositivo no soporta notificaciones web. En iPhone, intenta "Agregar a Inicio" esta página.');
         return;
       }
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
         setPushEnabled(true);
-        // Here you would normally subscribe the user to your Push Service (VAPID/Firebase)
-        new Notification('¡Notificaciones Activadas!', {
-          body: 'Recibirás alertas importantes aquí.',
-          icon: '/vite.svg'
-        });
+        toast.loading('Activando notificaciones...', { id: 'push-toast' });
+        
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          const res = await fetch(`${API_BASE}/api/vapid-public-key`);
+          const data = await res.json();
+          const applicationServerKey = urlBase64ToUint8Array(data.publicKey);
+          
+          const subscription = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey
+          });
+          
+          await fetch(`${API_BASE}/api/push-subscribe`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              subscription: subscription.toJSON(),
+              userId: user.id
+            })
+          });
+          
+          toast.success('Notificaciones Push activadas.', { id: 'push-toast' });
+          
+          new Notification('¡Notificaciones Activadas!', {
+            body: 'Recibirás alertas importantes aquí.',
+            icon: '/favicon.ico'
+          });
+        } catch (error) {
+          console.error(error);
+          toast.error('Error al activar push.', { id: 'push-toast' });
+        }
       } else {
         toast.error('Permiso denegado. Habilítalo desde la configuración de tu navegador.');
       }
     } else {
-      // "Disable" logic (visually, since we can't un-grant permission via JS)
       setPushEnabled(false);
-      // Here you would normally unsubscribe the user from your Push Service
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          await sub.unsubscribe();
+        }
+      } catch (e) {
+        console.error('Error desuscribiendo:', e);
+      }
     }
   };
 
