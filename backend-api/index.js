@@ -1593,9 +1593,9 @@ app.put('/api/meetings/:id/respond', (req, res) => {
 
   let meet_link = null;
   if (status === 'accepted') {
-    const r = () => Math.random().toString(36).substring(2, 5);
-    meet_link = `https://meet.google.com/${r()}-${r()}${r().substring(0, 1)}-${r()}`;
-    console.log(`[Google Meet API] Generando enlace Meet para reunión ID ${id}: ${meet_link}`);
+    const r = () => Math.random().toString(36).substring(2, 8);
+    meet_link = `https://meet.jit.si/NovaStrat-Meeting-${id}-${r()}`;
+    console.log(`[Jitsi Meet API] Generando enlace para reunión ID ${id}: ${meet_link}`);
   }
 
   db.get(`SELECT proposed_date_time FROM meetings WHERE id = ?`, [id], (err, row) => {
