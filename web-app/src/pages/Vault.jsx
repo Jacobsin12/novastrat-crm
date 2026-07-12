@@ -36,8 +36,12 @@ function SimpleVault({ user }) {
         if (proj && proj.drive_folder_id) {
           const rootFolder = { folderId: proj.drive_folder_id, folderName: 'Carpeta Principal' };
           setFolderStack([rootFolder]);
-          fetchDriveFiles(rootFolder.folderId);
+          await fetchDriveFiles(rootFolder.folderId);
+        } else {
+          setLoadingDrive(false);
         }
+      } else {
+        setLoadingDrive(false);
       }
     } catch (err) {
       console.error('Error fetching project for drive:', err);

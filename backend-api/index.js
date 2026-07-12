@@ -1293,8 +1293,13 @@ app.put('/api/projects/:id/stage', (req, res) => {
 // Obtener el proyecto activo de un cliente específico con sus asesores asociados
 app.get('/api/projects/client/:clientId', (req, res) => {
   const { clientId } = req.params;
-  
-  db.get(`SELECT id, title, description, stage, progress, created_at, consultant_id FROM projects WHERE client_id = ? LIMIT 1`, [clientId], (err, project) => {
+  db.get(
+    `SELECT p.id, p.title, p.description, p.stage, p.progress, p.created_at, p.consultant_id, u.drive_folder_id 
+     FROM projects p 
+     JOIN users u ON p.client_id = u.id 
+     WHERE p.client_id = ? LIMIT 1`, 
+    [clientId], 
+    (err, project) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!project) return res.json(null);
     
