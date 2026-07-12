@@ -1,6 +1,6 @@
 import { API_BASE } from '../config.js';
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Menu, User, Shield, Smartphone, BellRing, Key, LogOut, Copy, Apple, Lightbulb } from 'lucide-react';
+import { Search, Bell, Menu, User, Shield, Smartphone, BellRing, Key, LogOut, Copy, Apple, Lightbulb, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import '../styles/dashboard/Settings.css';
@@ -321,10 +321,35 @@ export default function Settings() {
                           setEditPhone(user.phone || '');
                           setIsEditProfileModalOpen(true);
                         }}
-                        className="btn-secondary" 
-                        style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                        style={{ 
+                          padding: '0.6rem 1.2rem', 
+                          fontSize: '0.9rem',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          background: 'rgba(20, 184, 166, 0.1)',
+                          color: 'var(--color-accent-teal)',
+                          border: '1px solid rgba(20, 184, 166, 0.3)',
+                          borderRadius: '25px',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.background = 'var(--color-accent-teal)';
+                          e.currentTarget.style.color = '#fff';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 6px 15px rgba(20, 184, 166, 0.4)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.background = 'rgba(20, 184, 166, 0.1)';
+                          e.currentTarget.style.color = 'var(--color-accent-teal)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 10px rgba(0,0,0,0.05)';
+                        }}
                       >
-                        Editar Perfil
+                        <Edit2 size={16} /> Editar Perfil
                       </button>
                     </div>
                   )}
