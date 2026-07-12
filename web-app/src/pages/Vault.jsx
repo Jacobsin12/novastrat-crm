@@ -198,11 +198,23 @@ function SimpleVault({ user }) {
                 }} style={{ display: 'none' }} />
               </label>
               {filesToUpload.length > 0 && (
-                <button type="button" onClick={() => setFilesToUpload([])} title="Quitar archivos" style={{ padding: '0.85rem', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <button type="button" onClick={() => setFilesToUpload([])} title="Quitar todos" style={{ padding: '0.85rem', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Trash2 size={18} />
                 </button>
               )}
             </div>
+            {filesToUpload.length > 0 && (
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {filesToUpload.map((f, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 1rem', background: 'var(--color-bg-panel)', borderRadius: '8px', border: '1px solid var(--color-border)', fontSize: '0.85rem', boxShadow: 'var(--inner-shadow)' }}>
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px', color: 'var(--color-text-main)' }}>{f.name}</span>
+                    <button type="button" onClick={() => setFilesToUpload(prev => prev.filter((_, idx) => idx !== i))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.25rem' }}>
+                       <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <button type="submit" className="btn-primary" disabled={filesToUpload.length === 0 || isUploading} style={{ opacity: (filesToUpload.length === 0 || isUploading) ? 0.5 : 1, width: '100%', padding: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
               {isUploading ? 'Subiendo...' : 'Subir a Bóveda'}
             </button>
