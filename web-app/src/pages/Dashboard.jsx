@@ -1152,8 +1152,8 @@ export default function Dashboard() {
                       </div>
 
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                        <button type="button" onClick={() => setIsMeetingModalOpen(false)} className="btn-secondary" style={{ padding: '0.75rem 1.5rem' }}>Cancelar</button>
-                        <button type="submit" className="btn-primary" disabled={isSubmittingMeeting} style={{ padding: '0.75rem 1.5rem' }}>
+                        <button type="button" onClick={() => setIsMeetingModalOpen(false)} className="btn-secondary">Cancelar</button>
+                        <button type="submit" className="btn-primary" disabled={isSubmittingMeeting}>
                           {isSubmittingMeeting ? 'Solicitando...' : 'Enviar Solicitud'}
                         </button>
                       </div>
@@ -1180,18 +1180,16 @@ export default function Dashboard() {
                           setIsCancelModalOpen(false);
                           setMeetingToCancelId(null);
                         }} 
-                        style={{ padding: '0.6rem 1.5rem', flex: 1 }}
                       >
                         No, mantener
                       </button>
                       <button 
-                        className="btn-primary" 
+                        className="btn-danger" 
                         onClick={() => {
                           handleRespondMeeting(meetingToCancelId, 'cancelled');
                           setIsCancelModalOpen(false);
                           setMeetingToCancelId(null);
                         }} 
-                        style={{ padding: '0.6rem 1.5rem', flex: 1, background: '#ef4444', border: 'none', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)', color: 'white' }}
                       >
                         Sí, cancelar
                       </button>

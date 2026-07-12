@@ -261,7 +261,7 @@ export default function Pipeline() {
             </div>
             
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-              <button className="btn-secondary" onClick={cancelStageChange} style={{ padding: '0.6rem 1.25rem' }}>
+              <button className="btn-secondary" onClick={cancelStageChange}>
                 Cancelar
               </button>
               <button className="btn-primary" onClick={confirmStageChange} disabled={!stageDescription.trim()} style={{ padding: '0.6rem 1.25rem', opacity: stageDescription.trim() ? 1 : 0.5, cursor: stageDescription.trim() ? 'pointer' : 'not-allowed' }}>
