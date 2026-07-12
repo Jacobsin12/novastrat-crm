@@ -40,6 +40,8 @@ export default function Dashboard() {
   
   // Estados para solicitar reunión
   const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [meetingToCancelId, setMeetingToCancelId] = useState(null);
   const [meetingTitle, setMeetingTitle] = useState('Reunión de Avance');
   const [meetingDateOnly, setMeetingDateOnly] = useState('');
   const [meetingTimeOnly, setMeetingTimeOnly] = useState('10:00');
@@ -893,9 +895,8 @@ export default function Dashboard() {
                                   )}
                                   <button 
                                     onClick={() => {
-                                      if(window.confirm('¿Estás seguro de cancelar esta reunión?')) {
-                                        handleRespondMeeting(m.id, 'cancelled');
-                                      }
+                                      setMeetingToCancelId(m.id);
+                                      setIsCancelModalOpen(true);
                                     }}
                                     style={{ 
                                       padding: '0.6rem', 
@@ -1157,6 +1158,44 @@ export default function Dashboard() {
                         </button>
                       </div>
                     </form>
+                  </div>
+                </div>
+              )}
+
+              {/* CANCEL MEETING MODAL */}
+              {isCancelModalOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                  <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '2rem', background: 'var(--color-bg-overlay)', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                      <AlertTriangle size={48} color="#ef4444" />
+                    </div>
+                    <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.25rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Cancelar Reunión</h3>
+                    <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.95rem', color: 'var(--color-text-muted)' }}>
+                      ¿Estás seguro de que deseas cancelar esta reunión? Esta acción no se puede deshacer.
+                    </p>
+                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                      <button 
+                        className="btn-secondary" 
+                        onClick={() => {
+                          setIsCancelModalOpen(false);
+                          setMeetingToCancelId(null);
+                        }} 
+                        style={{ padding: '0.6rem 1.5rem', flex: 1 }}
+                      >
+                        No, mantener
+                      </button>
+                      <button 
+                        className="btn-primary" 
+                        onClick={() => {
+                          handleRespondMeeting(meetingToCancelId, 'cancelled');
+                          setIsCancelModalOpen(false);
+                          setMeetingToCancelId(null);
+                        }} 
+                        style={{ padding: '0.6rem 1.5rem', flex: 1, background: '#ef4444', border: 'none', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)', color: 'white' }}
+                      >
+                        Sí, cancelar
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
