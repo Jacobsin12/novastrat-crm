@@ -133,7 +133,7 @@ function initDB() {
         client_id INTEGER NOT NULL,
         title TEXT NOT NULL,
         date_time DATETIME NOT NULL,
-        status TEXT CHECK(status IN ('pending', 'accepted', 'rejected', 'proposed')) DEFAULT 'pending',
+        status TEXT CHECK(status IN ('pending', 'accepted', 'rejected', 'proposed', 'completed', 'cancelled')) DEFAULT 'pending',
         proposed_date_time DATETIME,
         meet_link TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -141,6 +141,7 @@ function initDB() {
       )
     `, () => {
       db.run(`ALTER TABLE meetings ADD COLUMN duration_minutes INTEGER DEFAULT 60`, (err) => {});
+      db.run(`ALTER TABLE meetings ADD COLUMN consultant_id INTEGER`, (err) => {});
     });
 
     // 5d. Tabla para persistir el estado de notificaciones leídas/borradas por usuario
