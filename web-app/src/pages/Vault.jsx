@@ -168,15 +168,22 @@ function SimpleVault({ user }) {
             <UploadCloud size={32} color="var(--color-accent-teal)" />
           </div>
           <h2 className="title-glass" style={{ fontSize: '1.25rem', marginBottom: '0.5rem', textAlign: 'center' }}>Subir archivo a tu Bóveda</h2>
-          <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', textAlign: 'center', fontSize: '0.9rem' }}>Formatos soportados: PDF, Excel, Word (Max 10MB)</p>
+          <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', textAlign: 'center', fontSize: '0.9rem' }}>Formatos soportados: PNG, JPG, TXT, PDF, Excel, Word (Max 10MB)</p>
           <form onSubmit={handleUploadToFolder} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', width: '100%', maxWidth: '300px' }}>
-            <label style={{ width: '100%', cursor: 'pointer', padding: '0.85rem 1.5rem', borderRadius: '12px', background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-main)', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: 'var(--neumorphic-shadow)', transition: 'all 0.2s' }}>
-              <File size={18} color="var(--color-accent-teal)" />
-              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px' }}>
-                {fileToUpload ? fileToUpload.name : 'Seleccionar Archivo'}
-              </span>
-              <input type="file" onChange={(e) => setFileToUpload(e.target.files[0])} style={{ display: 'none' }} />
-            </label>
+            <div style={{ display: 'flex', gap: '0.5rem', width: '100%', alignItems: 'center' }}>
+              <label style={{ flex: 1, cursor: 'pointer', padding: '0.85rem 1.5rem', borderRadius: '12px', background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-main)', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: 'var(--neumorphic-shadow)', transition: 'all 0.2s' }}>
+                <File size={18} color="var(--color-accent-teal)" />
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>
+                  {fileToUpload ? fileToUpload.name : 'Seleccionar Archivo'}
+                </span>
+                <input type="file" accept=".png,.jpg,.jpeg,.txt,.pdf,.xls,.xlsx,.doc,.docx" onChange={(e) => setFileToUpload(e.target.files[0])} style={{ display: 'none' }} />
+              </label>
+              {fileToUpload && (
+                <button type="button" onClick={() => setFileToUpload(null)} title="Quitar archivo" style={{ padding: '0.85rem', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Trash2 size={18} />
+                </button>
+              )}
+            </div>
             <button type="submit" className="btn-primary" disabled={!fileToUpload || isUploading} style={{ opacity: (!fileToUpload || isUploading) ? 0.5 : 1, width: '100%', padding: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
               {isUploading ? 'Subiendo a la Bóveda...' : 'Subir a Bóveda'}
             </button>
