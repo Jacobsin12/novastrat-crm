@@ -152,14 +152,14 @@ function SimpleVault({ user }) {
         Conectado a Google Drive API (Carpeta Compartida con Asesor)
       </div>
 
-      {folderStack.length <= 1 ? (
+      {folderStack.length > 1 ? (
         <div className="card glass-panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2.5rem 1rem', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', boxShadow: 'var(--inner-shadow)' }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(234, 179, 8, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', border: '1px solid rgba(234, 179, 8, 0.2)' }}>
             <FolderOpen size={24} color="#eab308" />
           </div>
-          <h2 className="title-glass" style={{ fontSize: '1.1rem', marginBottom: '0.5rem', textAlign: 'center' }}>Selecciona una subcarpeta</h2>
+          <h2 className="title-glass" style={{ fontSize: '1.1rem', marginBottom: '0.5rem', textAlign: 'center' }}>Modo solo lectura</h2>
           <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', fontSize: '0.9rem', maxWidth: '400px' }}>
-            Para mantener el orden de tu proyecto, solo puedes subir archivos dentro de las carpetas específicas que tu asesor haya creado para ti en la sección inferior.
+            Las subcarpetas creadas por tu asesor son únicamente para visualizar entregables. Si deseas subir tus propios archivos, por favor regresa a tu carpeta principal.
           </p>
         </div>
       ) : (
@@ -167,7 +167,7 @@ function SimpleVault({ user }) {
           <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(20, 184, 166, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', border: '1px solid rgba(20, 184, 166, 0.2)' }}>
             <UploadCloud size={32} color="var(--color-accent-teal)" />
           </div>
-          <h2 className="title-glass" style={{ fontSize: '1.25rem', marginBottom: '0.5rem', textAlign: 'center' }}>Subir archivo a "{currentFolder?.folderName}"</h2>
+          <h2 className="title-glass" style={{ fontSize: '1.25rem', marginBottom: '0.5rem', textAlign: 'center' }}>Subir archivo a tu Bóveda</h2>
           <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', textAlign: 'center', fontSize: '0.9rem' }}>Formatos soportados: PDF, Excel, Word (Max 10MB)</p>
           <form onSubmit={handleUploadToFolder} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', width: '100%', maxWidth: '300px' }}>
             <label style={{ width: '100%', cursor: 'pointer', padding: '0.85rem 1.5rem', borderRadius: '12px', background: 'var(--color-bg-panel)', border: '1px solid var(--color-border)', color: 'var(--color-text-main)', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: 'var(--neumorphic-shadow)', transition: 'all 0.2s' }}>
