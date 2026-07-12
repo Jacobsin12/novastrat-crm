@@ -44,6 +44,7 @@ export default function Dashboard() {
   const [meetingDateOnly, setMeetingDateOnly] = useState('');
   const [meetingTimeOnly, setMeetingTimeOnly] = useState('10:00');
   const [meetingDuration, setMeetingDuration] = useState('60');
+  const [meetingConsultantId, setMeetingConsultantId] = useState('');
   const [isSubmittingMeeting, setIsSubmittingMeeting] = useState(false);
 
   const fetchStats = async (currentUser) => {
@@ -152,6 +153,13 @@ export default function Dashboard() {
   const handleRequestMeeting = async (e) => {
     e.preventDefault();
     if (!meetingDateOnly || !meetingTimeOnly) return toast.error('Selecciona una fecha y hora.');
+    if (!meetingConsultantId) return toast.error('Por favor, selecciona un consultor.');
+
+    const requestedStart = new Date(meetingDateOnly + 'T' + meetingTimeOnly).getTime();
+    if (requestedStart < Date.now()) {
+      return toast.error('No puedes agendar una reunión en el pasado.');
+    }
+
     setIsSubmittingMeeting(true);
     
     try {
@@ -160,6 +168,7 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           client_id: user.id,
+          consultant_id: meetingConsultantId,
           title: meetingTitle,
           date_time: meetingDateOnly + 'T' + meetingTimeOnly,
           duration_minutes: meetingDuration
@@ -169,8 +178,10 @@ export default function Dashboard() {
       if (res.ok) {
         toast.success('Solicitud de reunión enviada exitosamente.');
         setIsMeetingModalOpen(false);
+        setMeetingTitle('Reunión de Avance');
         setMeetingDateOnly('');
         setMeetingTimeOnly('10:00');
+        setMeetingConsultantId('');
         fetchClientData(user.id);
       } else {
         const err = await res.json();
@@ -1031,6 +1042,21 @@ export default function Dashboard() {
                           onChange={e => setMeetingTitle(e.target.value)} 
                           style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none' }} 
                         />
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-main)', fontWeight: 500 }}>Consultor</label>
+                        <select 
+                          required 
+                          value={meetingConsultantId} 
+                          onChange={e => setMeetingConsultantId(e.target.value)} 
+                          style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none' }} 
+                        >
+                          <option value="">-- Selecciona un consultor --</option>
+                          {clientProject && clientProject.consultants && clientProject.consultants.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div style={{ display: 'flex', gap: '0.75rem' }}>

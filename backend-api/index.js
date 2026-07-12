@@ -1491,9 +1491,9 @@ app.get('/api/meetings/admin', (req, res) => {
     sql += `
       JOIN projects p ON p.client_id = u.id
       JOIN project_consultants pc ON pc.project_id = p.id
-      WHERE pc.consultant_id = ?
+      WHERE pc.consultant_id = ? AND (m.consultant_id IS NULL OR m.consultant_id = ?)
     `;
-    params.push(consultantId);
+    params.push(consultantId, consultantId);
   }
 
   sql += ` ORDER BY m.date_time DESC`;
@@ -1506,9 +1506,9 @@ app.get('/api/meetings/admin', (req, res) => {
 
 // Solicitar una nueva reunión (Cliente)
 app.post('/api/meetings/request', (req, res) => {
-  const { client_id, title, date_time, duration_minutes } = req.body;
-  if (!client_id || !title || !date_time) {
-    return res.status(400).json({ error: 'Faltan parámetros obligatorios' });
+  const { client_id, title, date_time, duration_minutes, consultant_id } = req.body;
+  if (!client_id || !title || !date_time || !consultant_id) {
+    return res.status(400).json({ error: 'Faltan parámetros obligatorios (se requiere seleccionar consultor)' });
   }
 
   const durationVal = parseInt(duration_minutes) || 60;
@@ -1517,72 +1517,52 @@ app.post('/api/meetings/request', (req, res) => {
     return res.status(400).json({ error: 'No es posible agendar una reunión en una fecha o hora pasada.' });
   }
 
-  // 1. Buscar si el cliente tiene un consultor asignado
-  const consultantSql = `
-    SELECT pc.consultant_id 
-    FROM projects p
-    JOIN project_consultants pc ON pc.project_id = p.id
-    WHERE p.client_id = ? LIMIT 1
+  // 1. Buscar reuniones existentes del mismo consultor
+  const existingMeetingsSql = `
+    SELECT m.date_time, m.proposed_date_time, m.status, m.duration_minutes
+    FROM meetings m
+    WHERE m.consultant_id = ? AND m.status IN ('accepted', 'pending', 'proposed')
   `;
 
-  db.get(consultantSql, [client_id], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
-    
-    if (!row) {
-      // Si no tiene consultor, insertar directamente
-      return insertMeeting(client_id, title, date_time, durationVal, res);
+  db.all(existingMeetingsSql, [consultant_id], (err2, meetings) => {
+    if (err2) return res.status(500).json({ error: err2.message });
+
+    const requestedStart = new Date(date_time).getTime();
+    const requestedEnd = requestedStart + durationVal * 60 * 1000;
+
+    // Verificar colisión de intervalo
+    const conflict = meetings.find(meet => {
+      const targetTimeStr = meet.status === 'proposed' && meet.proposed_date_time ? meet.proposed_date_time : meet.date_time;
+      const existingStart = new Date(targetTimeStr).getTime();
+      const existingEnd = existingStart + (parseInt(meet.duration_minutes) || 60) * 60 * 1000;
+      
+      // Hay solapamiento si el inicio solicitado es antes del fin existente Y el fin solicitado es después del inicio existente
+      return requestedStart < existingEnd && requestedEnd > existingStart;
+    });
+
+    if (conflict) {
+      return res.status(400).json({ 
+        error: 'El consultor seleccionado ya tiene una reunión agendada que se cruza con este horario. Por favor, selecciona una hora diferente.' 
+      });
     }
 
-    const consultantId = row.consultant_id;
-
-    // 2. Buscar reuniones existentes del mismo consultor
-    const existingMeetingsSql = `
-      SELECT m.date_time, m.proposed_date_time, m.status, m.duration_minutes
-      FROM meetings m
-      JOIN projects p ON m.client_id = p.client_id
-      JOIN project_consultants pc ON pc.project_id = p.id
-      WHERE pc.consultant_id = ? AND m.status IN ('accepted', 'pending', 'proposed')
-    `;
-
-    db.all(existingMeetingsSql, [consultantId], (err2, meetings) => {
-      if (err2) return res.status(500).json({ error: err2.message });
-
-      const requestedStart = new Date(date_time).getTime();
-      const requestedEnd = requestedStart + durationVal * 60 * 1000;
-
-      // Verificar colisión de intervalo
-      const conflict = meetings.find(meet => {
-        const targetTimeStr = meet.status === 'proposed' && meet.proposed_date_time ? meet.proposed_date_time : meet.date_time;
-        const existingStart = new Date(targetTimeStr).getTime();
-        const existingEnd = existingStart + (parseInt(meet.duration_minutes) || 60) * 60 * 1000;
-        
-        // Hay solapamiento si el inicio solicitado es antes del fin existente Y el fin solicitado es después del inicio existente
-        return requestedStart < existingEnd && requestedEnd > existingStart;
-      });
-
-      if (conflict) {
-        return res.status(400).json({ 
-          error: 'El consultor asignado ya tiene una reunión agendada que se solapa con este horario. Por favor, selecciona una hora diferente.' 
-        });
-      }
-
-      // Sin conflictos, procedemos a guardar la solicitud
-      insertMeeting(client_id, title, date_time, durationVal, res);
-    });
+    // Sin conflictos, procedemos a guardar la solicitud
+    insertMeeting(client_id, consultant_id, title, date_time, durationVal, res);
   });
 });
 
-function insertMeeting(clientId, title, dateTime, durationMinutes, res) {
-  const sql = `INSERT INTO meetings (client_id, title, date_time, status, duration_minutes) VALUES (?, ?, ?, 'pending', ?)`;
-  db.run(sql, [clientId, title, dateTime, durationMinutes], function(err) {
+function insertMeeting(clientId, consultantId, title, dateTime, durationMinutes, res) {
+  const sql = `INSERT INTO meetings (client_id, consultant_id, title, date_time, status, duration_minutes) VALUES (?, ?, ?, ?, 'pending', ?)`;
+  db.run(sql, [clientId, consultantId, title, dateTime, durationMinutes], function(err) {
     if (err) return res.status(500).json({ error: err.message });
     
     try {
       db.get(`SELECT name FROM users WHERE id = ?`, [clientId], (err, user) => {
         if (!err && user) {
-          sendPushNotification(
+          sendPushNotificationToUser(
+            consultantId,
             'Nueva Solicitud de Reunión',
-            `El cliente "${user.name}" solicitó una llamada: "${title}".`,
+            `El cliente "${user.name}" solicitó una llamada contigo: "${title}".`,
             '/dashboard'
           );
         }
