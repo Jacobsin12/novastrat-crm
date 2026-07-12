@@ -9,19 +9,32 @@ const fs = require('fs');
 const { google } = require('googleapis');
 const { sendWelcomeEmail, sendSuspensionEmail, sendPasswordRecoveryEmail } = require('./emailService');
 
-// Configuración de Google Drive con Service Account
+// Configuración de Google Drive
 let drive = null;
 try {
-  const keyFile = path.join(__dirname, 'google-credentials.json');
-  if (fs.existsSync(keyFile)) {
-    const auth = new google.auth.GoogleAuth({
-      keyFile: keyFile,
-      scopes: ['https://www.googleapis.com/auth/drive'],
-    });
-    drive = google.drive({ version: 'v3', auth });
-    console.log('[Google Drive API] Autenticación con Service Account configurada correctamente.');
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REFRESH_TOKEN) {
+    // Usar OAuth2 (Cuenta Admin real) para evitar límites de cuota
+    const oAuth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      'urn:ietf:wg:oauth:2.0:oob'
+    );
+    oAuth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+    drive = google.drive({ version: 'v3', auth: oAuth2Client });
+    console.log('[Google Drive API] Autenticación con OAuth2 (Cuenta Real) configurada correctamente.');
   } else {
-    console.warn('[Google Drive API] Advertencia: google-credentials.json no encontrado. Se usará simulación.');
+    // Fallback a Service Account
+    const keyFile = path.join(__dirname, 'google-credentials.json');
+    if (fs.existsSync(keyFile)) {
+      const auth = new google.auth.GoogleAuth({
+        keyFile: keyFile,
+        scopes: ['https://www.googleapis.com/auth/drive'],
+      });
+      drive = google.drive({ version: 'v3', auth });
+      console.log('[Google Drive API] Autenticación con Service Account configurada correctamente.');
+    } else {
+      console.warn('[Google Drive API] Advertencia: No hay credenciales OAuth ni google-credentials.json. Se usará simulación.');
+    }
   }
 } catch (authErr) {
   console.error('[Google Drive API] Error en inicialización:', authErr.message);
