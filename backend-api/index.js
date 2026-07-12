@@ -168,13 +168,17 @@ function sendPushNotification(title, body, url = '/dashboard') {
 }
 
 function sendPushNotificationToUser(userId, title, body, url = '/dashboard') {
-  if (!userId) return;
+  if (!userId) {
+    console.log('sendPushNotificationToUser: No userId provided.');
+    return;
+  }
   db.all(`SELECT id, endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ?`, [userId], (err, rows) => {
     if (err) {
       console.error('Error fetching subscriptions for push (targeted):', err.message);
       return;
     }
     
+    console.log(`sendPushNotificationToUser: Found ${rows.length} subscriptions for userId ${userId}`);
     const payload = JSON.stringify({ title, body, url });
     
     rows.forEach(sub => {
@@ -184,7 +188,11 @@ function sendPushNotificationToUser(userId, title, body, url = '/dashboard') {
       };
       
       webpush.sendNotification(pushSubscription, payload)
+        .then(() => {
+          console.log(`Push sent successfully to user ${userId} at endpoint ${sub.endpoint.substring(0, 30)}...`);
+        })
         .catch(error => {
+          console.error(`Error sending push to user ${userId} at endpoint ${sub.endpoint.substring(0, 30)}... :`, error.message, error.statusCode);
           if (error.statusCode === 410 || error.statusCode === 404) {
             db.run(`DELETE FROM push_subscriptions WHERE id = ?`, [sub.id]);
           }
