@@ -1,5 +1,5 @@
 import { API_BASE } from '../config.js';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, LogOut, ChevronDown, Shield, Key, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -24,6 +24,22 @@ export default function Login() {
   const [tempUserId, setTempUserId] = useState(null);
   const [totpToken, setTotpToken] = useState('');
   const [isVerifying2fa, setIsVerifying2fa] = useState(false);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser.must_change_password === 1) {
+          navigate('/change-password');
+        } else {
+          navigate('/dashboard');
+        }
+      } catch (e) {
+        localStorage.removeItem('user');
+      }
+    }
+  }, [navigate]);
 
   const handleRecoverySubmit = async (e) => {
     e.preventDefault();
