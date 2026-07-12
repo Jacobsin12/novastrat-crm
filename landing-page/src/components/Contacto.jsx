@@ -29,10 +29,12 @@ export function Contacto() {
   const [ctaRef, ctaVis] = useInView({ threshold: 0.1 });
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [submitStatus, setSubmitStatus] = React.useState(null);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitStatus(null);
     
     const formData = new FormData(e.currentTarget);
     const data = {
@@ -43,8 +45,6 @@ export function Contacto() {
     };
 
     try {
-      // Usar la URL base del backend desde config si existe, o asumiendo /api si están en el mismo dominio.
-      // Para landing-page, si no hay API_BASE, usamos la ruta absoluta del backend.
       const API_URL = window.location.hostname.includes('localhost') ? 'http://localhost:3000' : 'https://novastratmx.com';
       
       const response = await fetch(`${API_URL}/api/landing/contact`, {
@@ -54,13 +54,14 @@ export function Contacto() {
       });
 
       if (response.ok) {
-        alert('¡Mensaje enviado exitosamente! Nos pondremos en contacto contigo pronto.');
+        setSubmitStatus('success');
         e.target.reset();
+        setTimeout(() => setSubmitStatus(null), 5000);
       } else {
-        alert('Hubo un problema al enviar tu mensaje. Intenta enviarnos un correo directamente.');
+        setSubmitStatus('error');
       }
     } catch (err) {
-      alert('Error de conexión. Por favor, contáctanos por WhatsApp o correo.');
+      setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
     }
@@ -121,6 +122,18 @@ export function Contacto() {
             {isSubmitting ? 'Enviando...' : 'Enviar Mensaje'}
             {!isSubmitting && <span className="arrow-circle"><ArrowRight size={18} /></span>}
           </button>
+          
+          {submitStatus === 'success' && (
+            <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)', textAlign: 'center', fontSize: '0.9rem' }}>
+              ¡Mensaje enviado exitosamente! Nos pondremos en contacto contigo pronto.
+            </div>
+          )}
+          
+          {submitStatus === 'error' && (
+            <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', textAlign: 'center', fontSize: '0.9rem' }}>
+              Hubo un problema al enviar tu mensaje. Intenta enviarnos un correo directamente.
+            </div>
+          )}
         </form>
       </div>
     </section>

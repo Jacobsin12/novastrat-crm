@@ -8,11 +8,13 @@ import Equipo from './components/Equipo';
 import Contacto from './components/Contacto';
 import Footer from './components/Footer';
 import DiagnosticoExpress from './components/DiagnosticoExpress';
+import LegalModal from './components/LegalModal';
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDiagOpen, setIsDiagOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('');
+  const [legalDoc, setLegalDoc] = useState(null);
 
   // Automatically open the diagnostic modal if coming from the login registration link
   useEffect(() => {
@@ -71,12 +73,14 @@ function App() {
       
       <Contacto />
       
-      <Footer />
+      <Footer onOpenLegal={setLegalDoc} />
       
       <DiagnosticoExpress 
         isOpen={isDiagOpen} 
         onClose={() => setIsDiagOpen(false)} 
       />
+
+      <LegalModal docType={legalDoc} onClose={() => setLegalDoc(null)} />
     </>
   );
 }
