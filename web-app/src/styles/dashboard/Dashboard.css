@@ -130,7 +130,7 @@
 .step-divider {
   flex: 1;
   height: 2px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255,  0.98);
   margin-top: 15px;
   min-width: 20px;
   border-radius: 2px;
@@ -209,7 +209,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 }
 
 input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255,  0.98);
   filter: invert(1);
 }
 

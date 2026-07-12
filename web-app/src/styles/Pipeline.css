@@ -46,7 +46,7 @@
   height: 8px;
 }
 .kanban-board::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.2);
+  background: rgba(0,0,0, 0.98);
   border-radius: 4px;
 }
 .kanban-board::-webkit-scrollbar-thumb {
