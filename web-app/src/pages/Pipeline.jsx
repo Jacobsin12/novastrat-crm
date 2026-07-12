@@ -1,41 +1,47 @@
+import { API_BASE } from '../config.js';
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Menu, LayoutDashboard, Columns, LogOut, FileText, Users, Settings, Building, Calendar, CheckCircle2, ChevronRight, Activity, Handshake, Target } from 'lucide-react';
+import { Search, Bell, Menu, LayoutDashboard, Columns, LogOut, FileText, Users, Settings, Building, Calendar, CheckCircle2, ChevronRight, Activity, Handshake, Target, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
+
 import '../styles/Pipeline.css';
 
 export default function Pipeline() {
   const navigate = useNavigate();
   const handleLogout = () => { localStorage.removeItem('user'); navigate('/login'); };
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
 
   // Estados del Kanban
   const [cards, setCards] = useState([]);
   const [draggedCard, setDraggedCard] = useState(null);
+  const [selectedCard, setSelectedCard] = useState(null);
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/projects`);
+      if (response.ok) {
+        const data = await response.json();
+        setCards(data);
+      }
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+    }
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
-    if (storedUser) setUser(JSON.parse(storedUser));
-    else navigate('/login');
-    
-    // Simular carga de tarjetas
-    setCards([
-      { id: 1, title: 'Reestructura Organizacional', client: 'TechNova', status: 'prospecting', date: '2026-05-15', client_name: 'TechNova' },
-      { id: 2, title: 'Optimización de Procesos', client: 'LogisCorp', status: 'proposal', date: '2026-05-18', client_name: 'LogisCorp' },
-      { id: 3, title: 'Auditoría Financiera', client: 'Financo', status: 'negotiation', date: '2026-05-20', client_name: 'Financo' },
-      { id: 4, title: 'Expansión de Mercado', client: 'GlobalTrade', status: 'closed_won', date: '2026-05-21', client_name: 'GlobalTrade' }
-    ]);
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      fetchProjects();
+    } else {
+      navigate('/login');
+    }
   }, [navigate]);
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
   const columns = [
-    { id: 'prospecting', title: '1. Prospección', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', icon: <Target size={18} color="#3b82f6" /> },
-    { id: 'proposal', title: '2. Propuesta', color: '#eab308', bg: 'rgba(234, 179, 8, 0.1)', icon: <FileText size={18} color="#eab308" /> },
-    { id: 'negotiation', title: '3. Negociación', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)', icon: <Handshake size={18} color="#f97316" /> },
-    { id: 'closed_won', title: '4. Ganado', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', icon: <CheckCircle2 size={18} color="#10b981" /> }
+    { id: 'Diagnóstico Inicial', title: '1. Diagnóstico', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', icon: <Target size={18} color="#3b82f6" /> },
+    { id: 'Plan Estratégico', title: '2. Estrategia', color: '#eab308', bg: 'rgba(234, 179, 8, 0.1)', icon: <FileText size={18} color="#eab308" /> },
+    { id: 'Implementación', title: '3. Implementación', color: '#f97316', bg: 'rgba(249, 115, 22, 0.1)', icon: <Handshake size={18} color="#f97316" /> },
+    { id: 'Cierre', title: '4. Cierre', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', icon: <CheckCircle2 size={18} color="#10b981" /> }
   ];
 
   const handleDragStart = (e, card) => {
@@ -56,17 +62,33 @@ export default function Pipeline() {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e, status) => {
+  const handleDrop = async (e, status) => {
     e.preventDefault();
-    if (draggedCard && draggedCard.status !== status) {
+    if (draggedCard && draggedCard.stage !== status) {
       const updatedCards = cards.map(c => 
-        c.id === draggedCard.id ? { ...c, status } : c
+        c.id === draggedCard.id ? { ...c, stage: status } : c
       );
       setCards(updatedCards);
+      
+      try {
+        const response = await fetch(`${API_BASE}/api/projects/${draggedCard.id}/stage`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stage: status })
+        });
+        if (!response.ok) {
+          console.error('Error updating stage on server');
+          fetchProjects(); // Revert
+        }
+      } catch (err) {
+        console.error('Connection error updating stage:', err);
+        fetchProjects(); // Revert
+      }
     }
   };
 
   const formatDate = (dateStr) => {
+    if (!dateStr) return '';
     const d = new Date(dateStr);
     return d.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
   };
@@ -78,26 +100,25 @@ export default function Pipeline() {
   if (!user) return null;
 
   return (
-    <div className="app-layout">
-      <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} user={user} />
-
-      <main className="main-content" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <Header toggleSidebar={toggleSidebar} user={user} />
-
-        <div className="pipeline-header">
-          <h1 className="title-glass">Pipeline de Ventas</h1>
-          <p className="subtitle-glass">Organiza y desliza tus oportunidades. (Desliza hacia los lados en tu celular)</p>
+    <>
+      <div className="pipeline-header">
+          <h1 className="title-glass">Proyectos y Consultorías</h1>
+          <p className="subtitle-glass">
+            {user.role === 'client' 
+              ? 'Visualiza el estado de tu consultoría. Haz clic en tu tarjeta para ver más detalles.' 
+              : 'Controla las fases de consultoría de tus clientes activos. Arrastra las tarjetas para avanzar de etapa.'}
+          </p>
         </div>
 
         <div className="kanban-board">
           {columns.map(col => {
-            const colCards = visibleCards.filter(c => c.status === col.id);
+            const colCards = visibleCards.filter(c => c.stage === col.id);
             return (
               <div 
                 key={col.id} 
                 className="kanban-column"
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, col.id)}
+                onDragOver={user.role === 'client' ? null : handleDragOver}
+                onDrop={user.role === 'client' ? null : (e) => handleDrop(e, col.id)}
               >
                 {/* Colored Top Bar */}
                 <div className="column-color-bar" style={{ background: col.color }}></div>
@@ -110,25 +131,26 @@ export default function Pipeline() {
                   {colCards.map(card => (
                     <div 
                       key={card.id} 
-                      className={`kanban-card color-${col.id}`}
-                      style={{ '--card-color': col.color }}
+                      className={`kanban-card stage-${col.id.replace(/\s+/g, '-').toLowerCase()}`}
+                      style={{ '--card-color': col.color, cursor: 'pointer' }}
                       draggable={user.role !== 'client'} // Clients cannot drag
                       onDragStart={(e) => handleDragStart(e, card)}
                       onDragEnd={handleDragEnd}
+                      onClick={() => setSelectedCard(card)}
                     >
                       <h4>{card.title}</h4>
                       
                       <p>
                         <Building size={14} opacity={0.6} /> 
-                        {card.client}
+                        {card.client_name}
                       </p>
                       
                       <div className="card-footer">
                         <span className="card-date">
-                          <Calendar size={12} opacity={0.6} /> {formatDate(card.date)}
+                          <Calendar size={12} opacity={0.6} /> {formatDate(card.created_at)}
                         </span>
                         <div className="card-avatar" style={{ background: col.color }}>
-                          {card.client.charAt(0)}
+                          {card.client_name ? card.client_name.charAt(0) : 'C'}
                         </div>
                       </div>
                     </div>
@@ -138,7 +160,50 @@ export default function Pipeline() {
             );
           })}
         </div>
-      </main>
-    </div>
+
+      {/* MODAL DETALLES DE PROYECTO */}
+      {selectedCard && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', padding: '2rem', background: 'var(--color-bg-overlay)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '1rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Detalles del Proyecto</h3>
+              <button onClick={() => setSelectedCard(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={24} /></button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.25rem' }}>Nombre de la Consultoría</span>
+                <strong style={{ fontSize: '1.2rem', color: 'var(--color-text-main)' }}>{selectedCard.title}</strong>
+              </div>
+              
+              <div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.25rem' }}>Cliente</span>
+                <span style={{ fontSize: '1rem', color: 'var(--color-text-main)', fontWeight: 500 }}>{selectedCard.client_name}</span>
+              </div>
+              
+              <div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.25rem' }}>Fase / Etapa Kanban</span>
+                <span style={{ 
+                  display: 'inline-block',
+                  background: 'rgba(20, 184, 166, 0.1)', 
+                  color: '#14b8a6', 
+                  padding: '0.25rem 0.75rem', 
+                  borderRadius: '20px', 
+                  fontSize: '0.8rem', 
+                  fontWeight: 600 
+                }}>{selectedCard.stage}</span>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.25rem' }}>Descripción / Avance de Consultoría</span>
+                <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--color-text-main)', background: 'var(--color-bg-card-inner)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--color-border)', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>
+                  {selectedCard.description || 'El consultor aún no ha agregado una descripción detallada del avance del proyecto.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

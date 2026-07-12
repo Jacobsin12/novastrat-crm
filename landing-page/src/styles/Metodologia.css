@@ -88,8 +88,8 @@
 
 .step-card p {
   font-family: var(--font-body);
-  color: #ababab;
-  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
   line-height: 1.65;
 }
 

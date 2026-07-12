@@ -1,15 +1,13 @@
+import { API_BASE } from '../config.js';
 import React, { useState, useEffect } from 'react';
 import { Search, Bell, Menu, UserPlus, Mail, Building, Plus, Edit2, Trash2, Phone, X, CheckCircle, AlertCircle, Target , LogOut} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
-import '../styles/Dashboard.css';
+import '../styles/dashboard/Leads.css';
 
 export default function Leads() {
   const navigate = useNavigate();
   const handleLogout = () => { localStorage.removeItem('user'); navigate('/login'); };
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   
   const [leads, setLeads] = useState([]);
@@ -21,12 +19,13 @@ export default function Leads() {
   
   // Forms state
   const [editingLead, setEditingLead] = useState(null);
-  const [formData, setFormData] = useState({ company_name: '', contact_email: '', contact_phone: '', diagnosis_score: 0 });
+  const [formData, setFormData] = useState({ company_name: '', contact_name: '', contact_email: '', contact_phone: '', diagnosis_score: 0, description: '' });
+  const [selectedLead, setSelectedLead] = useState(null); // Para el modal de detalles
   
   const [deleteReason, setDeleteReason] = useState('No le interesó');
   const [customReason, setCustomReason] = useState('');
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -37,6 +36,9 @@ export default function Leads() {
       } else {
         setUser(parsedUser);
         fetchLeads();
+        
+        const interval = setInterval(fetchLeads, 5000);
+        return () => clearInterval(interval);
       }
     } else {
       navigate('/login');
@@ -45,7 +47,7 @@ export default function Leads() {
 
   const fetchLeads = async () => {
     try {
-      const res = await fetch('http://localhost:3000/api/leads');
+      const res = await fetch(`${API_BASE}/api/leads`);
       if (res.ok) {
         const data = await res.json();
         setLeads(data);
@@ -57,7 +59,7 @@ export default function Leads() {
 
   const openAddModal = () => {
     setEditingLead(null);
-    setFormData({ company_name: '', contact_email: '', contact_phone: '', diagnosis_score: 0 });
+    setFormData({ company_name: '', contact_name: '', contact_email: '', contact_phone: '', diagnosis_score: 0, description: '' });
     setIsFormModalOpen(true);
   };
 
@@ -65,9 +67,11 @@ export default function Leads() {
     setEditingLead(lead);
     setFormData({ 
       company_name: lead.company_name, 
+      contact_name: lead.contact_name || '', 
       contact_email: lead.contact_email, 
       contact_phone: lead.contact_phone || '', 
-      diagnosis_score: lead.diagnosis_score || 0 
+      diagnosis_score: lead.diagnosis_score || 0,
+      description: lead.description || ''
     });
     setIsFormModalOpen(true);
   };
@@ -81,7 +85,7 @@ export default function Leads() {
 
   const handleSaveLead = async (e) => {
     e.preventDefault();
-    const url = editingLead ? `http://localhost:3000/api/leads/${editingLead.id}` : 'http://localhost:3000/api/leads';
+    const url = editingLead ? `${API_BASE}/api/leads/${editingLead.id}` : `${API_BASE}/api/leads`;
     const method = editingLead ? 'PUT' : 'POST';
 
     try {
@@ -95,7 +99,8 @@ export default function Leads() {
         setIsFormModalOpen(false);
         fetchLeads();
       } else {
-        toast.error('Error guardando el lead');
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.message || 'Error guardando el lead');
       }
     } catch (err) {
       toast.error('Error de conexión');
@@ -108,7 +113,7 @@ export default function Leads() {
     const finalReason = deleteReason === 'Otro' ? customReason : deleteReason;
     
     try {
-      const res = await fetch(`http://localhost:3000/api/leads/${editingLead.id}/status`, {
+      const res = await fetch(`${API_BASE}/api/leads/${editingLead.id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_active: 0, lost_reason: finalReason })
@@ -128,7 +133,7 @@ export default function Leads() {
 
   const handleRestoreLead = async (lead) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/leads/${lead.id}/status`, {
+      const res = await fetch(`${API_BASE}/api/leads/${lead.id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_active: 1, lost_reason: null })
@@ -163,7 +168,7 @@ export default function Leads() {
   const executeConvert = async (lead) => {
     try {
       const rawPassword = Math.random().toString(36).slice(-8);
-      const res = await fetch('http://localhost:3000/api/users/clients', {
+      const res = await fetch(`${API_BASE}/api/users/clients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -189,21 +194,19 @@ export default function Leads() {
 
   if (!user) return null;
 
-  // Filtrar los leads según la pestaña activa y si existe is_active
+  // Filtrar los leads según la pestaña activa y si existe is_active, ocultando los ya convertidos en la pestaña de activos
   const filteredLeads = leads.filter(lead => {
-    // Si la DB antigua no tiene is_active, asumimos 1
     const activeStatus = lead.is_active === undefined ? 1 : lead.is_active;
-    return activeTab === 'active' ? activeStatus === 1 : activeStatus === 0;
+    if (activeTab === 'active') {
+      return activeStatus === 1 && lead.status !== 'converted';
+    } else {
+      return activeStatus === 0;
+    }
   });
 
   return (
-    <div className="app-layout">
-      <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} user={user} />
-
-      <main className="main-content">
-        <Header toggleSidebar={toggleSidebar} user={user} />
-
-        <div className="dashboard-grid" style={{ display: 'block' }}>
+    <>
+      <div className="dashboard-grid" style={{ display: 'block' }}>
           <div className="card glass-panel" style={{ width: '100%', padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <h2 className="title-glass" style={{ margin: 0 }}>Directorio de Leads</h2>
@@ -242,7 +245,12 @@ export default function Leads() {
             ) : (
               <div className="glass-data-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {filteredLeads.map(lead => (
-                  <div key={lead.id} className="glass-data-item" style={{ background: 'var(--color-bg-card-inner)', borderRadius: '16px', padding: '1.25rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', border: '1px solid var(--color-border)', boxShadow: 'var(--inner-shadow)' }}>
+                  <div 
+                    key={lead.id} 
+                    className="glass-data-item" 
+                    onClick={() => setSelectedLead(lead)}
+                    style={{ background: 'var(--color-bg-card-inner)', borderRadius: '16px', padding: '1.25rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', border: '1px solid var(--color-border)', boxShadow: 'var(--inner-shadow)', cursor: 'pointer' }}
+                  >
                     
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flex: '1 1 300px' }}>
                       <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: activeTab === 'active' ? 'rgba(20, 184, 166, 0.1)' : 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: activeTab === 'active' ? 'var(--color-accent-teal)' : '#ef4444', boxShadow: 'var(--inner-shadow)', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -251,6 +259,7 @@ export default function Leads() {
                       <div>
                         <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem', color: 'var(--color-text-main)' }}>{lead.company_name}</h4>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600, color: 'var(--color-accent)' }}>Contacto: {lead.contact_name || 'Sin registrar'}</span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Mail size={14} /> {lead.contact_email}</span>
                           {lead.contact_phone && <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Phone size={14} /> {lead.contact_phone}</span>}
                         </div>
@@ -269,67 +278,83 @@ export default function Leads() {
                           <CheckCircle size={14} /> Convertido
                         </span>
                       )}
-
+ 
                       {/* ACTIONS */}
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         {activeTab === 'active' ? (
                           <>
-                            <button onClick={() => openEditModal(lead)} style={{ background: 'var(--color-bg-card-inner)', border: '1px solid var(--color-border)', borderRadius: '8px', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-muted)', boxShadow: 'var(--inner-shadow)' }}>
+                            <button onClick={(e) => { e.stopPropagation(); openEditModal(lead); }} style={{ background: 'var(--color-bg-card-inner)', border: '1px solid var(--color-border)', borderRadius: '8px', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-muted)', boxShadow: 'var(--inner-shadow)' }}>
                               <Edit2 size={16} />
                             </button>
-                            <button onClick={() => openDeleteModal(lead)} style={{ background: 'var(--color-bg-card-inner)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444', boxShadow: 'var(--inner-shadow)' }}>
+                            <button onClick={(e) => { e.stopPropagation(); openDeleteModal(lead); }} style={{ background: 'var(--color-bg-card-inner)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444', boxShadow: 'var(--inner-shadow)' }}>
                               <Trash2 size={16} />
                             </button>
                             {lead.status === 'new' && (
-                              <button className="btn-primary" onClick={() => handleConvert(lead)} style={{ padding: '0 1rem', height: '36px', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <button className="btn-primary" onClick={(e) => { e.stopPropagation(); handleConvert(lead); }} style={{ padding: '0 1rem', height: '36px', borderRadius: '8px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <UserPlus size={16} /> Convertir
                               </button>
                             )}
                           </>
                         ) : (
-                          <button onClick={() => handleRestoreLead(lead)} style={{ background: 'rgba(16, 185, 129, 0.1)', border: 'none', color: '#10b981', borderRadius: '8px', padding: '0 1rem', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                          <button onClick={(e) => { e.stopPropagation(); handleRestoreLead(lead); }} style={{ background: 'rgba(16, 185, 129, 0.1)', border: 'none', color: '#10b981', borderRadius: '8px', padding: '0 1rem', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
                             Restaurar Lead
                           </button>
                         )}
                       </div>
                     </div>
-
                   </div>
                 ))}
               </div>
             )}
           </div>
         </div>
-      </main>
 
       {/* ADD / EDIT MODAL */}
       {isFormModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', padding: '2rem', background: 'var(--color-bg-panel)' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '2rem 1rem', overflowY: 'auto' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '750px', padding: '2rem', background: 'var(--color-bg-overlay)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--color-text-main)' }}>{editingLead ? 'Editar Prospecto' : 'Nuevo Prospecto'}</h3>
               <button onClick={() => setIsFormModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={24} /></button>
             </div>
             
-            <form onSubmit={handleSaveLead} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Empresa / Nombre</label>
-                <input required type="text" value={formData.company_name} onChange={e => setFormData({...formData, company_name: e.target.value})} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none', boxShadow: 'var(--inner-shadow)' }} placeholder="Ej. Logística SA" />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Correo Electrónico</label>
-                <input required type="email" value={formData.contact_email} onChange={e => setFormData({...formData, contact_email: e.target.value})} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none', boxShadow: 'var(--inner-shadow)' }} placeholder="contacto@empresa.com" />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Teléfono (Opcional)</label>
-                <input type="text" value={formData.contact_phone} onChange={e => setFormData({...formData, contact_phone: e.target.value})} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none', boxShadow: 'var(--inner-shadow)' }} placeholder="+52 55 1234 5678" />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Score Diagnóstico (0-100)</label>
-                <input type="number" min="0" max="100" value={formData.diagnosis_score} onChange={e => setFormData({...formData, diagnosis_score: e.target.value})} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none', boxShadow: 'var(--inner-shadow)' }} />
+            <form onSubmit={handleSaveLead} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                {/* Columna Izquierda */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Nombre de la Empresa</label>
+                    <input required type="text" value={formData.company_name} onChange={e => setFormData({...formData, company_name: e.target.value})} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none', boxShadow: 'var(--inner-shadow)' }} placeholder="Ej. Logística SA" />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Nombre del Contacto</label>
+                    <input type="text" value={formData.contact_name} onChange={e => setFormData({...formData, contact_name: e.target.value})} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none', boxShadow: 'var(--inner-shadow)' }} placeholder="Ej. Juan Pérez" />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Correo Electrónico</label>
+                    <input required type="email" value={formData.contact_email} onChange={e => setFormData({...formData, contact_email: e.target.value})} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none', boxShadow: 'var(--inner-shadow)' }} placeholder="contacto@empresa.com" />
+                  </div>
+                </div>
+
+                {/* Columna Derecha */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Teléfono (Opcional)</label>
+                    <input type="text" value={formData.contact_phone} onChange={e => setFormData({...formData, contact_phone: e.target.value})} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none', boxShadow: 'var(--inner-shadow)' }} placeholder="+52 55 1234 5678" />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Descripción / A qué se dedica</label>
+                    <textarea 
+                      value={formData.description} 
+                      onChange={e => setFormData({...formData, description: e.target.value})} 
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none', resize: 'none', minHeight: '115px', fontFamily: 'inherit', boxShadow: 'var(--inner-shadow)' }} 
+                      placeholder="Ej. Distribuidora de insumos médicos con presencia nacional." 
+                    />
+                  </div>
+                </div>
               </div>
               
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem' }}>
                 <button type="button" onClick={() => setIsFormModalOpen(false)} style={{ padding: '0.75rem 1.5rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', cursor: 'pointer', fontWeight: 500, boxShadow: 'var(--inner-shadow)' }}>Cancelar</button>
                 <button type="submit" className="btn-primary" style={{ padding: '0.75rem 1.5rem', borderRadius: '8px' }}>Guardar</button>
               </div>
@@ -340,8 +365,8 @@ export default function Leads() {
 
       {/* DELETE REASON MODAL */}
       {isDeleteModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '2rem', background: 'var(--color-bg-panel)' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '2rem 1rem', overflowY: 'auto' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '2rem', background: 'var(--color-bg-overlay)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', color: '#ef4444' }}>
               <AlertCircle size={28} />
               <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--color-text-main)' }}>Baja de Prospecto</h3>
@@ -381,6 +406,73 @@ export default function Leads() {
         </div>
       )}
 
-    </div>
+      {/* DETALLE DEL LEAD MODAL */}
+      {selectedLead && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '2rem 1rem', overflowY: 'auto' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', padding: '2rem', background: 'var(--color-bg-overlay)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '1rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--color-text-main)' }}>Detalles del Prospecto</h3>
+              <button onClick={() => setSelectedLead(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={24} /></button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.25rem' }}>Nombre de la Empresa</span>
+                <strong style={{ fontSize: '1.2rem', color: 'var(--color-text-main)' }}>{selectedLead.company_name}</strong>
+              </div>
+              
+              <div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.25rem' }}>Nombre del Contacto</span>
+                <span style={{ fontSize: '1rem', color: 'var(--color-text-main)', fontWeight: 500 }}>{selectedLead.contact_name || 'No registrado'}</span>
+              </div>
+              
+              <div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.25rem' }}>Correo Electrónico</span>
+                <span style={{ fontSize: '1rem', color: 'var(--color-text-main)' }}>{selectedLead.contact_email}</span>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.25rem' }}>Teléfono de Contacto</span>
+                <span style={{ fontSize: '1rem', color: 'var(--color-text-main)' }}>{selectedLead.contact_phone || 'No registrado'}</span>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.25rem' }}>Descripción / Actividad</span>
+                <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--color-text-main)', background: 'var(--color-bg-card-inner)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--color-border)', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>
+                  {selectedLead.description || 'Sin descripción disponible.'}
+                </p>
+              </div>
+
+              {selectedLead.contact_phone && (
+                <a 
+                  href={`https://wa.me/${selectedLead.contact_phone.replace(/[^0-9]/g, '')}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="btn-primary"
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '0.5rem', 
+                    background: '#25D366', 
+                    color: '#fff', 
+                    textDecoration: 'none', 
+                    padding: '0.85rem', 
+                    borderRadius: '8px', 
+                    fontWeight: 600, 
+                    textAlign: 'center', 
+                    marginTop: '0.5rem',
+                    boxShadow: '0 4px 12px rgba(37, 211, 102, 0.2)' 
+                  }}
+                >
+                  <Phone size={18} /> Chatear por WhatsApp
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+    </>
   );
 }

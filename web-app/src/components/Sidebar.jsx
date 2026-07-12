@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, FileText, Columns, Settings, LogOut, Users, Target, X, User, Pin, PinOff } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import '../styles/Dashboard.css';
+import '../styles/dashboard/Layout.css';
 
 export default function Sidebar({ isSidebarOpen, setIsSidebarOpen, user }) {
   const navigate = useNavigate();

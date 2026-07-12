@@ -133,6 +133,7 @@ export default function DiagnosticoExpress({ isOpen, onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scoreResult, setScoreResult] = useState(null);
   const [showSuccessNotice, setShowSuccessNotice] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
 
@@ -152,11 +153,12 @@ export default function DiagnosticoExpress({ isOpen, onClose }) {
   const handleSubmitLead = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setErrorMsg('');
     const score = calculateScore();
     
     // Validate phone number using libphonenumber-js
     if (!leadData.phone || !isValidPhoneNumber(leadData.phone)) {
-      alert('Por favor ingresa un número de teléfono válido.');
+      setErrorMsg('Por favor ingresa un número de teléfono válido.');
       setIsSubmitting(false);
       return;
     }
@@ -167,8 +169,9 @@ export default function DiagnosticoExpress({ isOpen, onClose }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           company_name: leadData.company,
+          contact_name: leadData.name,
           contact_email: leadData.email,
-          phone: leadData.phone,
+          contact_phone: leadData.phone,
           diagnosis_score: score
         })
       });
@@ -176,8 +179,13 @@ export default function DiagnosticoExpress({ isOpen, onClose }) {
       if (response.ok) {
         setScoreResult(score);
       } else {
-        console.error('Error al enviar lead');
-        alert('Hubo un error al procesar tu solicitud.');
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.error === 'already_exists') {
+          setErrorMsg(errorData.message || 'Este correo electrónico ya se encuentra registrado. Ya hemos recibido tu solicitud.');
+        } else {
+          console.error('Error al enviar lead:', errorData);
+          setErrorMsg('Hubo un error al procesar tu solicitud.');
+        }
       }
     } catch (err) {
       console.error(err);
@@ -193,6 +201,7 @@ export default function DiagnosticoExpress({ isOpen, onClose }) {
     setIsFinished(false);
     setScoreResult(null);
     setShowSuccessNotice(false);
+    setErrorMsg('');
     setLeadData({ name: '', email: '', phone: '', company: '', countryCode: '+52' });
     onClose();
   };
@@ -278,16 +287,36 @@ export default function DiagnosticoExpress({ isOpen, onClose }) {
           <h3>¡Análisis completado!</h3>
           <p>Para desbloquear tu diagnóstico y conocer las recomendaciones de nuestros expertos, déjanos tus datos.</p>
           <form className="diag-form" onSubmit={handleSubmitLead}>
+            {errorMsg && (
+              <div className="diag-error-banner fade-in" style={{
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                borderRadius: '12px',
+                padding: '0.75rem 1rem',
+                marginBottom: '1rem',
+                color: '#ea3838',
+                fontSize: '0.85rem',
+                lineHeight: '1.45',
+                textAlign: 'left',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                fontFamily: 'var(--font-body)'
+              }}>
+                <span style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center' }}>⚠️</span>
+                <span>{errorMsg}</span>
+              </div>
+            )}
             <div className="form-group-diag">
               <input 
                 type="text" placeholder="Nombre completo" required 
-                value={leadData.name} onChange={e => setLeadData({...leadData, name: e.target.value})} 
+                value={leadData.name} onChange={e => { setErrorMsg(''); setLeadData({...leadData, name: e.target.value}); }} 
               />
             </div>
             <div className="form-group-diag">
               <input 
                 type="text" placeholder="Nombre de la empresa" required 
-                value={leadData.company} onChange={e => setLeadData({...leadData, company: e.target.value})} 
+                value={leadData.company} onChange={e => { setErrorMsg(''); setLeadData({...leadData, company: e.target.value}); }} 
               />
             </div>
             <div className="form-row-diag">
@@ -296,7 +325,7 @@ export default function DiagnosticoExpress({ isOpen, onClose }) {
                   type="email" placeholder="Correo electrónico" required 
                   pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                   title="Ingresa un correo electrónico válido"
-                  value={leadData.email} onChange={e => setLeadData({...leadData, email: e.target.value})} 
+                  value={leadData.email} onChange={e => { setErrorMsg(''); setLeadData({...leadData, email: e.target.value}); }} 
                 />
               </div>
               <div className="form-group-diag phone-input-container">
@@ -305,7 +334,7 @@ export default function DiagnosticoExpress({ isOpen, onClose }) {
                   countrySelectComponent={SearchableCountrySelect}
                   placeholder="WhatsApp / Teléfono"
                   value={leadData.phone}
-                  onChange={val => setLeadData({...leadData, phone: val})}
+                  onChange={val => { setErrorMsg(''); setLeadData({...leadData, phone: val}); }}
                   required
                 />
               </div>

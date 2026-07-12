@@ -1,11 +1,10 @@
+import { API_BASE } from '../config.js';
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, Columns, Settings, LogOut, Search, Bell, Menu, X, Users, DollarSign, TrendingUp, Briefcase, CheckCircle, Clock, Calendar, Download, PhoneCall, Mail, Video, ChevronRight, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, FileText, Columns, Settings, LogOut, Search, Bell, Menu, X, Users, DollarSign, TrendingUp, Briefcase, CheckCircle, Clock, Calendar, Download, PhoneCall, Mail, Video, ChevronRight, AlertTriangle, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import '../styles/Dashboard.css';
-
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
+import '../styles/dashboard/Dashboard.css';
 
 const mockLeadsData = [
   { name: 'Ene', leads: 4 },
@@ -19,30 +18,231 @@ const mockLeadsData = [
 export default function Dashboard() {
   const navigate = useNavigate();
   const handleLogout = () => { localStorage.removeItem('user'); navigate('/login'); };
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState({
+    activeClients: 0,
+    estimatedRevenue: 120000,
+    leadsChart: [],
+    recentActivity: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Estados del portal de cliente
+  const [clientProject, setClientProject] = useState(null);
+  const [clientMeetings, setClientMeetings] = useState([]);
+  const [clientDocuments, setClientDocuments] = useState([]);
+  
+  // Estados de reuniones para Admin/Asesor
+  const [adminMeetings, setAdminMeetings] = useState([]);
+  const [proposingMeetingId, setProposingMeetingId] = useState(null);
+  const [proposedDateInput, setProposedDateInput] = useState('');
+  const [proposedTimeInput, setProposedTimeInput] = useState('10:00');
+  
+  // Estados para solicitar reunión
+  const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
+  const [meetingTitle, setMeetingTitle] = useState('Reunión de Avance');
+  const [meetingDateOnly, setMeetingDateOnly] = useState('');
+  const [meetingTimeOnly, setMeetingTimeOnly] = useState('10:00');
+  const [meetingDuration, setMeetingDuration] = useState('60');
+  const [isSubmittingMeeting, setIsSubmittingMeeting] = useState(false);
+
+  const fetchStats = async (currentUser) => {
+    const userObj = currentUser || user;
+    if (!userObj) return;
+    try {
+      let url = `${API_BASE}/api/dashboard/stats`;
+      if (userObj.role === 'consultant') {
+        url = `${API_BASE}/api/consultant/${userObj.id}/dashboard`;
+      }
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAdminMeetings = async (currentUser) => {
+    const userObj = currentUser || user;
+    if (!userObj) return;
+    try {
+      let url = `${API_BASE}/api/meetings/admin`;
+      if (userObj.role === 'consultant') {
+        url = `${API_BASE}/api/meetings/admin?consultantId=${userObj.id}`;
+      }
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setAdminMeetings(data);
+      }
+    } catch (err) {
+      console.error('Error fetching admin meetings:', err);
+    }
+  };
+
+  const handleRespondMeeting = async (meetingId, status, proposedDate = null) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/meetings/${meetingId}/respond`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, proposed_date_time: proposedDate })
+      });
+      if (res.ok) {
+        toast.success(
+          status === 'accepted' ? 'Reunión aceptada. Enlace de Meet generado.' :
+          status === 'rejected' ? 'Reunión rechazada.' :
+          'Propuesta de cambio enviada al cliente.'
+        );
+        setProposingMeetingId(null);
+        setProposedDateInput('');
+        setProposedTimeInput('10:00');
+        if (user && user.role === 'client') {
+          fetchClientData(user.id);
+        } else {
+          fetchAdminMeetings();
+        }
+      } else {
+        toast.error('Error al responder a la reunión');
+      }
+    } catch (err) {
+      toast.error('Error de conexión');
+    }
+  };
+
+  const fetchClientData = async (clientId) => {
+    try {
+      const projRes = await fetch(`${API_BASE}/api/projects/client/${clientId}`);
+      if (projRes.ok) {
+        const projData = await projRes.json();
+        setClientProject(projData);
+        
+        if (projData) {
+          const docsRes = await fetch(`${API_BASE}/api/documents?projectId=${projData.id}`);
+          if (docsRes.ok) {
+            const docsData = await docsRes.json();
+            setClientDocuments(docsData);
+          }
+        }
+      }
+      
+      const meetRes = await fetch(`${API_BASE}/api/meetings/client/${clientId}`);
+      if (meetRes.ok) {
+        const meetData = await meetRes.json();
+        setClientMeetings(meetData);
+      }
+    } catch (err) {
+      console.error('Error fetching client portal data:', err);
+    }
+  };
+
+  const getStepStatus = (stepStage) => {
+    if (!clientProject) return 'pending';
+    const stages = ['Diagnóstico Inicial', 'Plan Estratégico', 'Implementación', 'Cierre'];
+    const currentIdx = stages.indexOf(clientProject.stage);
+    const targetIdx = stages.indexOf(stepStage);
+    if (targetIdx < currentIdx) return 'completed';
+    if (targetIdx === currentIdx) return 'active';
+    return 'pending';
+  };
+
+  const handleRequestMeeting = async (e) => {
+    e.preventDefault();
+    if (!meetingDateOnly || !meetingTimeOnly) return toast.error('Selecciona una fecha y hora.');
+    setIsSubmittingMeeting(true);
+    
+    try {
+      const res = await fetch(`${API_BASE}/api/meetings/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: user.id,
+          title: meetingTitle,
+          date_time: meetingDateOnly + 'T' + meetingTimeOnly,
+          duration_minutes: meetingDuration
+        })
+      });
+      
+      if (res.ok) {
+        toast.success('Solicitud de reunión enviada exitosamente.');
+        setIsMeetingModalOpen(false);
+        setMeetingDateOnly('');
+        setMeetingTimeOnly('10:00');
+        fetchClientData(user.id);
+      } else {
+        const err = await res.json();
+        toast.error('Error: ' + err.error);
+      }
+    } catch (err) {
+      toast.error('Error de conexión');
+    } finally {
+      setIsSubmittingMeeting(false);
+    }
+  };
+
+  const formatActivityTime = (dateStr) => {
+    if (!dateStr) return 'Hace un momento';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMins < 1) return 'Hace un momento';
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours} hr${diffHours > 1 ? 's' : ''}`;
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    
+    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  };
+
+  const getMinDate = () => {
+    const now = new Date();
+    const tzOffset = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - tzOffset).toISOString().slice(0, 10);
+  };
+
+  const getMinDateTime = () => {
+    const now = new Date();
+    const tzOffset = now.getTimezoneOffset() * 60000;
+    return new Date(now.getTime() - tzOffset).toISOString().slice(0, 16);
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
+      fetchStats(parsedUser);
+      if (parsedUser.role === 'client') {
+        fetchClientData(parsedUser.id);
+      } else {
+        fetchAdminMeetings(parsedUser);
+      }
+      
+      const interval = setInterval(() => {
+        fetchStats(parsedUser);
+        if (parsedUser.role === 'client') {
+          fetchClientData(parsedUser.id);
+        } else {
+          fetchAdminMeetings(parsedUser);
+        }
+      }, 5000);
+      return () => clearInterval(interval);
     } else {
       navigate('/login');
     }
   }, [navigate]);
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
   if (!user) return null;
 
   return (
-    <div className="app-layout">
-      <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} user={user} />
-
-      <main className="main-content">
-        <Header toggleSidebar={toggleSidebar} user={user} />
-
-        <div className="dashboard-grid">
+    <div className="dashboard-grid">
           {user.role === 'admin' && (
             <>
               {/* WELCOME CARD */}
@@ -57,7 +257,9 @@ export default function Dashboard() {
                   <DollarSign size={18} color="var(--color-text-muted)" />
                   <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Ingresos Estimados</h4>
                 </div>
-                <h2 style={{ fontSize: '2rem', margin: 0, color: 'var(--color-text-main)', fontWeight: 600 }}>$124,500</h2>
+                <h2 style={{ fontSize: '2rem', margin: 0, color: 'var(--color-text-main)', fontWeight: 600 }}>
+                  {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(stats.estimatedRevenue)}
+                </h2>
                 <p style={{color: '#10b981', fontSize: '0.85rem', margin: 0, fontWeight: 500}}>+12% este mes</p>
               </div>
               
@@ -66,7 +268,7 @@ export default function Dashboard() {
                   <Users size={18} color="var(--color-text-muted)" />
                   <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Clientes Activos</h4>
                 </div>
-                <h2 style={{ fontSize: '2rem', margin: 0, color: 'var(--color-text-main)', fontWeight: 600 }}>14</h2>
+                <h2 style={{ fontSize: '2rem', margin: 0, color: 'var(--color-text-main)', fontWeight: 600 }}>{stats.activeClients}</h2>
                 <p style={{color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0, fontWeight: 500}}>En proceso</p>
               </div>
 
@@ -78,9 +280,10 @@ export default function Dashboard() {
                     Gestionar Nuevos Leads
                   </button>
                 </div>
-                <div style={{ width: '100%', height: 260, minWidth: 0 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={mockLeadsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <div style={{ width: '100%', height: 260 }}>
+                  {/* Se agregó minWidth={0} aquí abajo para solucionar el error de redimensionamiento */}
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                    <AreaChart data={stats.leadsChart && stats.leadsChart.length > 0 ? stats.leadsChart : mockLeadsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.3}/>
@@ -98,10 +301,136 @@ export default function Dashboard() {
                   </ResponsiveContainer>
                 </div>
               </div>
+
+              {/* SOLICITUDES DE REUNIÓN PARA ADMIN/ASESOR */}
+              <div className="card glass-panel col-span-2" style={{ padding: '1.5rem' }}>
+                <h3 style={{ marginBottom: '1.5rem', color: 'var(--color-text-main)', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Calendar size={20} color="var(--color-accent)" /> Solicitudes de Reuniones de Clientes
+                </h3>
+
+                {adminMeetings.length === 0 ? (
+                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '1rem' }}>
+                    No hay solicitudes de reunión registradas.
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {adminMeetings.map(meet => {
+                      const dateStr = new Date(meet.date_time).toLocaleString('es-MX', {
+                        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                      });
+                      return (
+                        <div key={meet.id} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--color-bg-card-inner)', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: 'var(--inner-shadow)' }}>
+                          <div>
+                            <span style={{ fontSize: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '0.15rem 0.5rem', borderRadius: '10px', fontWeight: 600, display: 'inline-block', marginBottom: '0.25rem' }}>
+                              {meet.company_name || meet.client_name}
+                            </span>
+                            <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>{meet.title}</h4>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <Clock size={14} /> {dateStr}
+                            </p>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            {meet.status === 'pending' && (
+                              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                <button 
+                                  onClick={() => handleRespondMeeting(meet.id, 'accepted')} 
+                                  className="btn-primary" 
+                                  style={{ padding: '0.6rem 1.25rem', fontSize: '0.85rem', background: '#10b981', border: 'none', borderRadius: '10px', fontWeight: 600, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)', transition: 'all 0.2s', cursor: 'pointer' }}
+                                >
+                                  Aceptar
+                                </button>
+                                <button 
+                                  onClick={() => setProposingMeetingId(meet.id)} 
+                                  className="btn-secondary" 
+                                  style={{ padding: '0.6rem 1.25rem', fontSize: '0.85rem', borderRadius: '10px', fontWeight: 600, border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', transition: 'all 0.2s', cursor: 'pointer' }}
+                                >
+                                  Proponer Nueva Fecha
+                                </button>
+                              </div>
+                            )}
+
+                            {meet.status === 'accepted' && (
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+                                <span style={{ color: '#10b981', fontSize: '0.85rem', fontWeight: 600 }}>✓ Aceptada</span>
+                                {meet.meet_link && (
+                                  <a href={meet.meet_link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.8rem', color: 'var(--color-accent)', textDecoration: 'underline' }}>Enlace de Meet</a>
+                                )}
+                              </div>
+                            )}
+
+                            {meet.status === 'rejected' && (
+                              <span style={{ color: '#ef4444', fontSize: '0.85rem', fontWeight: 600 }}>Rechazada</span>
+                            )}
+
+                            {meet.status === 'proposed' && (
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <span style={{ color: '#3b82f6', fontSize: '0.85rem', fontWeight: 600 }}>Cambio propuesto</span>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                                  Nueva fecha: {meet.proposed_date_time ? new Date(meet.proposed_date_time).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'No especificada'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Formulario inline para proponer fecha */}
+                          {proposingMeetingId === meet.id && (
+                            <div style={{ width: '100%', borderTop: '1px solid var(--color-border)', marginTop: '0.75rem', paddingTop: '0.75rem', display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <label style={{ fontSize: '0.8rem', color: 'var(--color-text-main)' }}>Nueva propuesta:</label>
+                              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <input 
+                                  type="date" 
+                                  required
+                                  min={getMinDate()}
+                                  value={proposedDateInput}
+                                  onChange={e => setProposedDateInput(e.target.value)}
+                                  style={{ 
+                                    padding: '0.5rem 1rem', 
+                                    borderRadius: '8px', 
+                                    border: '1px solid var(--color-border)', 
+                                    background: 'var(--color-bg-card-inner)', 
+                                    color: 'var(--color-text-main)', 
+                                    fontSize: '0.85rem',
+                                    boxShadow: 'var(--inner-shadow)',
+                                    outline: 'none',
+                                    cursor: 'pointer'
+                                  }}
+                                />
+                                <input 
+                                  type="time" 
+                                  required
+                                  value={proposedTimeInput}
+                                  onChange={e => setProposedTimeInput(e.target.value)}
+                                  style={{ 
+                                    padding: '0.5rem 1rem', 
+                                    borderRadius: '8px', 
+                                    border: '1px solid var(--color-border)', 
+                                    background: 'var(--color-bg-card-inner)', 
+                                    color: 'var(--color-text-main)', 
+                                    fontSize: '0.85rem',
+                                    boxShadow: 'var(--inner-shadow)',
+                                    outline: 'none',
+                                    cursor: 'pointer'
+                                  }}
+                                />
+                              </div>
+                              <button onClick={() => {
+                                if (!proposedDateInput || !proposedTimeInput) return toast.error('Selecciona una fecha y hora.');
+                                handleRespondMeeting(meet.id, 'proposed', proposedDateInput + 'T' + proposedTimeInput);
+                              }} className="btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}>Enviar Propuesta</button>
+                              <button onClick={() => setProposingMeetingId(null)} className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}>Cancelar</button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </>
           )}
 
-          {user.role === 'consultant' && (
+           {user.role === 'consultant' && (
             <>
               {/* WELCOME */}
               <div className="card glass-panel col-span-2 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem' }}>
@@ -113,39 +442,40 @@ export default function Dashboard() {
               <div className="card glass-panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', padding: '1.5rem', gap: '0.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                   <Briefcase size={18} color="var(--color-text-muted)" />
-                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Proyectos Activos</h4>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Mis Clientes Activos</h4>
                 </div>
-                <h2 style={{ fontSize: '2rem', margin: 0, color: 'var(--color-text-main)', fontWeight: 600 }}>3</h2>
-                <p style={{color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0, fontWeight: 500}}>Todos al corriente</p>
+                <h2 style={{ fontSize: '2rem', margin: 0, color: 'var(--color-text-main)', fontWeight: 600 }}>{stats.activeClients || 0}</h2>
+                <p style={{color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0, fontWeight: 500}}>En proceso de consultoría</p>
               </div>
               <div className="card glass-panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', padding: '1.5rem', gap: '0.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                   <FileText size={18} color="var(--color-text-muted)" />
-                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Por Revisar</h4>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>Docs por Revisar</h4>
                 </div>
-                <h2 style={{ fontSize: '2rem', margin: 0, color: '#ef4444', fontWeight: 600 }}>5</h2>
-                <p style={{color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0, fontWeight: 500}}>Documentos nuevos</p>
+                <h2 style={{ fontSize: '2rem', margin: 0, color: (stats.pendingDocs || 0) > 0 ? '#ef4444' : 'var(--color-text-main)', fontWeight: 600 }}>{stats.pendingDocs || 0}</h2>
+                <p style={{color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0, fontWeight: 500}}>Subidos por clientes</p>
               </div>
 
-              {/* TO-DO LIST */}
+              {/* LISTA DE CLIENTES ASIGNADOS */}
               <div className="card glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', gridRow: 'span 2' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle size={18} color="var(--color-accent)" />
-                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Tareas de Hoy</h4>
+                  <Users size={18} color="var(--color-accent)" />
+                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Mis Clientes</h4>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.5rem', background: 'var(--color-bg-card-inner)', borderRadius: '8px', boxShadow: 'var(--inner-shadow)' }}>
-                    <input type="checkbox" style={{ width: '18px', height: '18px', accentColor: 'var(--color-accent-teal)' }} />
-                    <span style={{ fontSize: '0.9rem', color: 'var(--color-text-main)' }}>Revisar reporte financiero (Financo)</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.5rem', background: 'var(--color-bg-card-inner)', borderRadius: '8px', boxShadow: 'var(--inner-shadow)' }}>
-                    <input type="checkbox" style={{ width: '18px', height: '18px', accentColor: 'var(--color-accent-teal)' }} />
-                    <span style={{ fontSize: '0.9rem', color: 'var(--color-text-main)' }}>Enviar propuesta comercial a Globex</span>
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', padding: '0.5rem', background: 'var(--color-bg-card-inner)', borderRadius: '8px', boxShadow: 'var(--inner-shadow)' }}>
-                    <input type="checkbox" style={{ width: '18px', height: '18px', accentColor: 'var(--color-accent-teal)' }} defaultChecked />
-                    <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)', textDecoration: 'line-through' }}>Llamada de inicio con TechNova</span>
-                  </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem', overflowY: 'auto', maxHeight: '350px' }}>
+                  {!stats.clientsList || stats.clientsList.length === 0 ? (
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>No tienes clientes asignados actualmente.</p>
+                  ) : (
+                    stats.clientsList.map(c => (
+                      <div key={c.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', padding: '0.75rem', background: 'var(--color-bg-card-inner)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text-main)' }}>{c.company_name || c.name}</span>
+                          <span style={{ fontSize: '0.7rem', background: 'rgba(20, 184, 166, 0.1)', color: 'var(--color-accent-teal)', padding: '0.1rem 0.4rem', borderRadius: '10px', fontWeight: 600 }}>{c.progress}%</span>
+                        </div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Fase: {c.stage}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -153,74 +483,200 @@ export default function Dashboard() {
               <div className="card glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Calendar size={18} color="var(--color-accent)" />
-                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Agenda (Próximos)</h4>
+                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Reuniones Pendientes</h4>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(20,184,166,0.1)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid var(--color-accent-teal)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '45px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--color-accent-teal)' }}>12:00</span>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>PM</span>
-                    </div>
-                    <div>
-                      <h5 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-main)' }}>Presentación Estratégica</h5>
-                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>TechNova Inc. (Videollamada)</p>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--color-bg-card-inner)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid #64748b' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '45px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#94a3b8' }}>16:30</span>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>PM</span>
-                    </div>
-                    <div>
-                      <h5 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-main)' }}>Reunión Interna (Status)</h5>
-                      <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Sala de juntas</p>
-                    </div>
-                  </div>
+                  {adminMeetings.filter(m => m.status === 'pending').length === 0 ? (
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Sin reuniones pendientes por confirmar.</p>
+                  ) : (
+                    adminMeetings.filter(m => m.status === 'pending').slice(0, 2).map(meet => (
+                      <div key={meet.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(20,184,166,0.1)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid var(--color-accent-teal)' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '45px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--color-accent-teal)' }}>
+                            {new Date(meet.date_time).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                          </span>
+                        </div>
+                        <div>
+                          <h5 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-main)' }}>{meet.title}</h5>
+                          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{meet.company_name || meet.client_name}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
-              {/* CRITICAL ALERTS */}
+              {/* ATENCION */}
               <div className="card glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', borderTop: '4px solid #f59e0b' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <AlertTriangle size={18} color="#f59e0b" />
-                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Atención Requerida</h4>
+                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Recordatorio</h4>
                 </div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--color-text-main)', margin: 0 }}>
-                  El proyecto <strong>Expansión GlobalTrade</strong> lleva 5 días sin movimiento en la fase de Negociación. 
+                  Recuerda revisar y validar a tiempo la bóveda de tus clientes asignados. Solo cuentas con permisos de lectura para auditar la información.
                 </p>
-                <button className="btn-secondary" style={{ width: 'fit-content', padding: '0.4rem 1rem', fontSize: '0.8rem' }}>Enviar recordatorio</button>
               </div>
 
               {/* CONSULTANT ACTIVITY */}
-              <div className="card glass-panel col-span-2">
+              <div className="card glass-panel col-span-2" style={{ padding: '1.5rem' }}>
                 <h3 style={{marginBottom: '1.5rem', color: 'var(--color-text-main)', fontSize: '1.25rem'}}>Actividad de tus Proyectos</h3>
-                <ul className="activity-list">
-                  <li className="activity-item" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--color-border)' }}>
-                    <div className="activity-dot green"></div>
-                    <div className="activity-text">
-                      <p style={{ margin: 0, fontWeight: 500 }}>TechNova Inc. firmó el acuerdo de confidencialidad.</p>
-                      <span>Hace 1 hora</span>
-                    </div>
-                  </li>
-                  <li className="activity-item">
-                    <div className="activity-dot blue"></div>
-                    <div className="activity-text">
-                      <p style={{ margin: 0, fontWeight: 500 }}>Se subió la factura del mes para LogisCorp.</p>
-                      <span>Esta mañana</span>
-                    </div>
-                  </li>
-                </ul>
+                {(!stats.recentActivity || stats.recentActivity.length === 0) ? (
+                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', padding: '1rem 0' }}>Sin actividad reciente.</p>
+                ) : (
+                  <ul className="activity-list">
+                    {stats.recentActivity.map((act, index) => (
+                      <li key={index} className="activity-item" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--color-border)', marginBottom: '0.75rem' }}>
+                        <div className={`activity-dot ${act.type === 'document' ? 'green' : 'blue'}`}></div>
+                        <div className="activity-text">
+                          <p style={{ margin: 0, fontWeight: 500 }}>{act.description}</p>
+                          <span>{formatActivityTime(act.date)}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {/* SOLICITUDES DE REUNIÓN PARA ADMIN/ASESOR */}
+              <div className="card glass-panel col-span-2" style={{ padding: '1.5rem' }}>
+                <h3 style={{ marginBottom: '1.5rem', color: 'var(--color-text-main)', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Calendar size={20} color="var(--color-accent)" /> Solicitudes de Reuniones de Clientes
+                </h3>
+
+                {adminMeetings.length === 0 ? (
+                  <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '1rem' }}>
+                    No hay solicitudes de reunión registradas.
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {adminMeetings.map(meet => {
+                      const dateStr = new Date(meet.date_time).toLocaleString('es-MX', {
+                        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                      });
+                      return (
+                        <div key={meet.id} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--color-bg-card-inner)', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: 'var(--inner-shadow)' }}>
+                          <div>
+                            <span style={{ fontSize: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '0.15rem 0.5rem', borderRadius: '10px', fontWeight: 600, display: 'inline-block', marginBottom: '0.25rem' }}>
+                              {meet.company_name || meet.client_name}
+                            </span>
+                            <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>{meet.title}</h4>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <Clock size={14} /> {dateStr}
+                            </p>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            {meet.status === 'pending' && (
+                              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                                <button 
+                                  onClick={() => handleRespondMeeting(meet.id, 'accepted')} 
+                                  className="btn-primary" 
+                                  style={{ padding: '0.6rem 1.25rem', fontSize: '0.85rem', background: '#10b981', border: 'none', borderRadius: '10px', fontWeight: 600, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)', transition: 'all 0.2s', cursor: 'pointer' }}
+                                >
+                                  Aceptar
+                                </button>
+                                <button 
+                                  onClick={() => setProposingMeetingId(meet.id)} 
+                                  className="btn-secondary" 
+                                  style={{ padding: '0.6rem 1.25rem', fontSize: '0.85rem', borderRadius: '10px', fontWeight: 600, border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', transition: 'all 0.2s', cursor: 'pointer' }}
+                                >
+                                  Proponer Nueva Fecha
+                                </button>
+                              </div>
+                            )}
+
+                            {meet.status === 'accepted' && (
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+                                <span style={{ color: '#10b981', fontSize: '0.85rem', fontWeight: 600 }}>✓ Aceptada</span>
+                                {meet.meet_link && (
+                                  <a href={meet.meet_link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.8rem', color: 'var(--color-accent)', textDecoration: 'underline' }}>Enlace de Meet</a>
+                                )}
+                              </div>
+                            )}
+
+                            {meet.status === 'rejected' && (
+                              <span style={{ color: '#ef4444', fontSize: '0.85rem', fontWeight: 600 }}>Rechazada</span>
+                            )}
+
+                            {meet.status === 'proposed' && (
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <span style={{ color: '#3b82f6', fontSize: '0.85rem', fontWeight: 600 }}>Cambio propuesto</span>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                                  Nueva fecha: {meet.proposed_date_time ? new Date(meet.proposed_date_time).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'No especificada'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Formulario inline para proponer fecha */}
+                          {proposingMeetingId === meet.id && (
+                            <div style={{ width: '100%', borderTop: '1px solid var(--color-border)', marginTop: '0.75rem', paddingTop: '0.75rem', display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <label style={{ fontSize: '0.8rem', color: 'var(--color-text-main)' }}>Nueva propuesta:</label>
+                              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <input 
+                                  type="date" 
+                                  required
+                                  min={getMinDate()}
+                                  value={proposedDateInput}
+                                  onChange={e => setProposedDateInput(e.target.value)}
+                                  style={{ 
+                                    padding: '0.5rem 1rem', 
+                                    borderRadius: '8px', 
+                                    border: '1px solid var(--color-border)', 
+                                    background: 'var(--color-bg-card-inner)', 
+                                    color: 'var(--color-text-main)', 
+                                    fontSize: '0.85rem',
+                                    boxShadow: 'var(--inner-shadow)',
+                                    outline: 'none',
+                                    cursor: 'pointer'
+                                  }}
+                                />
+                                <input 
+                                  type="time" 
+                                  required
+                                  value={proposedTimeInput}
+                                  onChange={e => setProposedTimeInput(e.target.value)}
+                                  style={{ 
+                                    padding: '0.5rem 1rem', 
+                                    borderRadius: '8px', 
+                                    border: '1px solid var(--color-border)', 
+                                    background: 'var(--color-bg-card-inner)', 
+                                    color: 'var(--color-text-main)', 
+                                    fontSize: '0.85rem',
+                                    boxShadow: 'var(--inner-shadow)',
+                                    outline: 'none',
+                                    cursor: 'pointer'
+                                  }}
+                                />
+                              </div>
+                              <button onClick={() => {
+                                if (!proposedDateInput || !proposedTimeInput) return toast.error('Selecciona una fecha y hora.');
+                                handleRespondMeeting(meet.id, 'proposed', proposedDateInput + 'T' + proposedTimeInput);
+                              }} className="btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}>Enviar Propuesta</button>
+                              <button onClick={() => setProposingMeetingId(null)} className="btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}>Cancelar</button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </>
           )}
-
 
           {user.role === 'client' && (
             <>
               {/* WELCOME */}
               <div className="card glass-panel col-span-2 welcome-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: '0.75rem', padding: '2rem' }}>
                 <h1 className="title-glass" style={{ margin: 0 }}>Tu Portal de Proyecto</h1>
-                <p style={{ margin: 0, fontSize: '1rem' }}>Bienvenido, <strong>{user.name}</strong>. Aquí puedes dar seguimiento en tiempo real al avance de tu consultoría.</p>
+                <p style={{ margin: 0, fontSize: '1rem' }}>
+                  Bienvenido, <strong>{user.name}</strong>. Aquí puedes dar seguimiento en tiempo real al avance de tu consultoría.
+                </p>
+                {clientProject && (
+                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', color: 'var(--color-text-muted)', italic: 'true' }}>
+                    Proyecto: <strong>{clientProject.title}</strong>
+                  </p>
+                )}
               </div>
 
               {/* PROGRESS STEPPER */}
@@ -231,79 +687,230 @@ export default function Dashboard() {
                 </div>
                 
                 <div className="stepper-container">
-                  <div className="step completed">
-                    <div className="step-icon"><CheckCircle size={16} /></div>
+                  {/* STEP 1: Diagnóstico Inicial */}
+                  <div className={`step ${getStepStatus('Diagnóstico Inicial')}`}>
+                    <div className="step-icon">
+                      {getStepStatus('Diagnóstico Inicial') === 'completed' ? <CheckCircle size={16} /> : '1'}
+                    </div>
                     <div className="step-content">
                       <h4>Diagnóstico</h4>
-                      <p>Completado</p>
+                      <p>{getStepStatus('Diagnóstico Inicial') === 'completed' ? 'Completado' : getStepStatus('Diagnóstico Inicial') === 'active' ? 'En Proceso' : 'Pendiente'}</p>
                     </div>
                   </div>
-                  <div className="step-divider completed"></div>
+                  <div className={`step-divider ${getStepStatus('Plan Estratégico') === 'completed' || getStepStatus('Plan Estratégico') === 'active' ? 'completed' : ''}`}></div>
                   
-                  <div className="step active">
-                    <div className="step-icon"><div style={{width: 8, height: 8, background: '#fff', borderRadius: '50%'}}></div></div>
+                  {/* STEP 2: Plan Estratégico */}
+                  <div className={`step ${getStepStatus('Plan Estratégico')}`}>
+                    <div className="step-icon">
+                      {getStepStatus('Plan Estratégico') === 'completed' ? <CheckCircle size={16} /> : '2'}
+                    </div>
                     <div className="step-content">
                       <h4>Estrategia</h4>
-                      <p>En Proceso</p>
+                      <p>{getStepStatus('Plan Estratégico') === 'completed' ? 'Completado' : getStepStatus('Plan Estratégico') === 'active' ? 'En Proceso' : 'Pendiente'}</p>
                     </div>
                   </div>
-                  <div className="step-divider"></div>
+                  <div className={`step-divider ${getStepStatus('Implementación') === 'completed' || getStepStatus('Implementación') === 'active' ? 'completed' : ''}`}></div>
                   
-                  <div className="step">
-                    <div className="step-icon">3</div>
+                  {/* STEP 3: Implementación */}
+                  <div className={`step ${getStepStatus('Implementación')}`}>
+                    <div className="step-icon">
+                      {getStepStatus('Implementación') === 'completed' ? <CheckCircle size={16} /> : '3'}
+                    </div>
                     <div className="step-content">
                       <h4>Implementación</h4>
-                      <p>Pendiente</p>
+                      <p>{getStepStatus('Implementación') === 'completed' ? 'Completado' : getStepStatus('Implementación') === 'active' ? 'En Proceso' : 'Pendiente'}</p>
                     </div>
                   </div>
-                  <div className="step-divider"></div>
+                  <div className={`step-divider ${getStepStatus('Cierre') === 'completed' || getStepStatus('Cierre') === 'active' ? 'completed' : ''}`}></div>
                   
-                  <div className="step">
-                    <div className="step-icon">4</div>
+                  {/* STEP 4: Cierre */}
+                  <div className={`step ${getStepStatus('Cierre')}`}>
+                    <div className="step-icon">
+                      {getStepStatus('Cierre') === 'completed' ? <CheckCircle size={16} /> : '4'}
+                    </div>
                     <div className="step-content">
                       <h4>Cierre</h4>
-                      <p>Pendiente</p>
+                      <p>{getStepStatus('Cierre') === 'completed' ? 'Completado' : getStepStatus('Cierre') === 'active' ? 'En Proceso' : 'Pendiente'}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* NEXT MEETING */}
-              <div className="card glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="card glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Calendar size={18} color="var(--color-accent)" />
-                  <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Próxima Reunión</h4>
+                  <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Reuniones y Asesoría</h4>
                 </div>
-                <div style={{ background: 'rgba(59,130,246,0.05)', borderRadius: '12px', padding: '1rem', border: '1px solid rgba(59,130,246,0.1)' }}>
-                  <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: 'var(--color-text-main)' }}>Presentación de Estrategia</h5>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <Clock size={14} /> Jueves 25 May, 10:00 AM
-                  </p>
-                </div>
-                <button className="btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.6rem' }}>
-                  <Video size={16} /> Unirse a la llamada
-                </button>
+                
+                {clientMeetings.length > 0 ? (() => {
+                  const m = clientMeetings[0]; // La reunión más reciente
+                  const dateStr = new Date(m.date_time).toLocaleString('es-MX', { 
+                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+                  });
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                      <div style={{ background: 'var(--color-bg-card-inner)', borderRadius: '12px', padding: '1rem', border: '1px solid var(--color-border)', boxShadow: 'var(--inner-shadow)' }}>
+                        <h5 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: 'var(--color-text-main)', fontWeight: 600 }}>{m.title}</h5>
+                        <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <Clock size={14} /> {dateStr}
+                        </p>
+                        
+                        {m.status === 'pending' && (
+                          <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block' }}>
+                            Pendiente de confirmar por asesor
+                          </span>
+                        )}
+                        {m.status === 'accepted' && (
+                          <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block' }}>
+                            ✓ Aceptada (Enlace generado)
+                          </span>
+                        )}
+                        {m.status === 'rejected' && (
+                          <span style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block' }}>
+                            Rechazada por el asesor
+                          </span>
+                        )}
+                        {m.status === 'proposed' && (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.25rem' }}>
+                            <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block', width: 'fit-content' }}>
+                              Alternativa propuesta por asesor:
+                            </span>
+                            <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)', paddingLeft: '0.25rem' }}>
+                              Nueva fecha: {m.proposed_date_time ? new Date(m.proposed_date_time).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'No especificada'}
+                            </p>
+                            <button
+                              onClick={() => handleRespondMeeting(m.id, 'accepted')}
+                              className="btn-primary"
+                              style={{ 
+                                padding: '0.5rem 1rem', 
+                                fontSize: '0.8rem', 
+                                background: '#10b981', 
+                                border: 'none', 
+                                borderRadius: '8px', 
+                                fontWeight: 600, 
+                                boxShadow: '0 4px 10px rgba(16, 185, 129, 0.2)', 
+                                cursor: 'pointer',
+                                width: '100%',
+                                marginTop: '0.5rem',
+                                color: 'white'
+                              }}
+                            >
+                              ✓ Aceptar Propuesta
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {m.status === 'accepted' && m.meet_link ? (
+                        <a 
+                          href={m.meet_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="btn-primary" 
+                          style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem', padding: '0.6rem', textDecoration: 'none', alignItems: 'center' }}
+                        >
+                          <Video size={16} /> Unirse a Google Meet
+                        </a>
+                      ) : (
+                        <button 
+                          onClick={() => setIsMeetingModalOpen(true)} 
+                          className="btn-primary" 
+                          style={{ 
+                            width: '100%', 
+                            padding: '0.75rem 1rem', 
+                            borderRadius: '10px', 
+                            fontWeight: 600, 
+                            border: 'none', 
+                            background: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-teal) 100%)', 
+                            color: 'white', 
+                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)', 
+                            transition: 'all 0.2s', 
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem'
+                          }}
+                        >
+                          <Calendar size={16} /> Solicitar Otra Reunión
+                        </button>
+                      )}
+                    </div>
+                  );
+                })() : (
+                  <div style={{ textAlign: 'center', padding: '1rem 0', color: 'var(--color-text-muted)', display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, justifyContent: 'center' }}>
+                    <p style={{ margin: 0, fontSize: '0.9rem' }}>No tienes reuniones programadas.</p>
+                    <button 
+                      onClick={() => setIsMeetingModalOpen(true)}
+                      className="btn-primary" 
+                      style={{ 
+                        width: '100%', 
+                        padding: '0.75rem 1rem', 
+                        borderRadius: '10px', 
+                        fontWeight: 600, 
+                        border: 'none', 
+                        background: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-teal) 100%)', 
+                        color: 'white', 
+                        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)', 
+                        transition: 'all 0.2s', 
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <Calendar size={16} /> Solicitar una Reunión
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* CONSULTOR ASIGNADO */}
-              <div className="card glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="card glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Users size={18} color="var(--color-accent)" />
                   <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Tu Consultor</h4>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--color-accent)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                    AM
-                  </div>
-                  <div>
-                    <h5 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)' }}>Aarón Martínez</h5>
-                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Socio Director</p>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                  <a href="mailto:aaron@novastrat.com" className="btn-secondary" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '0.5rem', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)' }}><Mail size={16} color="var(--color-text-main)" /></a>
-                  <a href="tel:+525555555555" className="btn-secondary" style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '0.5rem', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.1)' }}><PhoneCall size={16} color="var(--color-text-main)" /></a>
-                </div>
+                
+                {clientProject && clientProject.consultant_name ? (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-teal) 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', boxShadow: 'var(--neumorphic-shadow)' }}>
+                        {clientProject.consultant_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <h5 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)' }}>{clientProject.consultant_name}</h5>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Asesor NovaStrat</p>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                      <a href={`mailto:${clientProject.consultant_email}`} className="btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--color-border)', color: 'var(--color-text-main)' }} title={`Enviar correo a ${clientProject.consultant_email}`}><Mail size={16} /></a>
+                      {clientProject.consultant_phone && (
+                        <>
+                          <a href={`tel:${clientProject.consultant_phone}`} className="btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--color-border)', color: 'var(--color-text-main)' }} title={`Llamar a ${clientProject.consultant_phone}`}><PhoneCall size={16} /></a>
+                          <a href={`https://wa.me/${clientProject.consultant_phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', borderRadius: '8px', border: '1px solid #25d366', background: 'rgba(37, 211, 102, 0.05)', color: '#25d366' }} title="Enviar WhatsApp"><MessageCircle size={16} /></a>
+                        </>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', border: '1px dashed var(--color-border)' }}>
+                        ?
+                      </div>
+                      <div>
+                        <h5 style={{ margin: 0, fontSize: '1rem', color: 'var(--color-text-main)' }}>Sin asesor asignado</h5>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Pendiente de asignación</p>
+                      </div>
+                    </div>
+                    <div style={{ padding: '0.5rem 0', fontSize: '0.75rem', color: 'var(--color-text-muted)', textAlign: 'center', borderTop: '1px solid var(--color-border)', marginTop: '0.5rem' }}>
+                      Te notificaremos cuando se te asigne un consultor.
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* VAULT SUMMARY */}
@@ -316,50 +923,161 @@ export default function Dashboard() {
                   <ChevronRight size={18} color="var(--color-text-muted)" style={{ cursor: 'pointer' }} onClick={() => navigate('/vault')} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--color-bg-card-inner)', padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: 'var(--inner-shadow)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <FileText size={18} color="#ef4444" />
-                      <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--color-text-main)' }}>Reporte_Diagnostico.pdf</span>
-                    </div>
-                    <Download size={16} color="var(--color-text-muted)" style={{ cursor: 'pointer' }} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--color-bg-card-inner)', padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: 'var(--inner-shadow)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <FileText size={18} color="#14b8a6" />
-                      <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--color-text-main)' }}>Plan_Estrategico_v1.xlsx</span>
-                    </div>
-                    <Download size={16} color="var(--color-text-muted)" style={{ cursor: 'pointer' }} />
-                  </div>
+                  {clientDocuments.length > 0 ? clientDocuments.slice(0, 3).map(doc => {
+                    const isXls = doc.file_name.endsWith('.xlsx') || doc.file_name.endsWith('.xls');
+                    return (
+                      <div key={doc.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--color-bg-card-inner)', padding: '0.75rem 1rem', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: 'var(--inner-shadow)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <FileText size={18} color={isXls ? '#14b8a6' : '#ef4444'} />
+                          <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--color-text-main)' }}>{doc.file_name}</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: '0.7rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '0.1rem 0.4rem', borderRadius: '10px', fontWeight: 600 }} title="Sincronizado con Google Drive">
+                            Drive
+                          </span>
+                        </div>
+                        <a 
+                          href={`${API_BASE}/uploads/${doc.file_path}`} 
+                          download={doc.file_name} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ color: 'var(--color-text-muted)' }}
+                        >
+                          <Download size={16} style={{ cursor: 'pointer' }} />
+                        </a>
+                      </div>
+                    );
+                  }) : (
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)', textAlign: 'center', padding: '0.5rem 0' }}>
+                      Aún no has subido documentos a la bóveda.
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* CLIENT ACTIVITY */}
-              <div className="card glass-panel col-span-2">
+              <div className="card glass-panel col-span-2" style={{ padding: '1.5rem' }}>
                 <h3 style={{marginBottom: '1.5rem', color: 'var(--color-text-main)', fontSize: '1.25rem'}}>Actividad del Proyecto</h3>
                 <ul className="activity-list">
-                  <li className="activity-item" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--color-border)' }}>
-                    <div className="activity-dot blue"></div>
-                    <div className="activity-text">
-                      <p style={{ margin: 0, fontWeight: 500 }}>Aarón Martínez subió un nuevo documento: <strong>Plan_Estrategico_v1.xlsx</strong></p>
-                      <span>Ayer a las 4:30 PM</span>
-                    </div>
-                  </li>
-                  <li className="activity-item" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--color-border)' }}>
-                    <div className="activity-dot green"></div>
-                    <div className="activity-text">
-                      <p style={{ margin: 0, fontWeight: 500 }}>Fase de Diagnóstico Completada</p>
-                      <span>Hace 3 días</span>
-                    </div>
-                  </li>
-                  <li className="activity-item">
-                    <div className="activity-dot gold"></div>
-                    <div className="activity-text">
-                      <p style={{ margin: 0, fontWeight: 500 }}>Proyecto Iniciado Oficialmente</p>
-                      <span>Hace 2 semanas</span>
-                    </div>
-                  </li>
+                  {clientDocuments.length > 0 ? clientDocuments.map(doc => {
+                    return (
+                      <li key={doc.id} className="activity-item" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--color-border)' }}>
+                        <div className="activity-dot blue"></div>
+                        <div className="activity-text">
+                          <p style={{ margin: 0, fontWeight: 500 }}>
+                            {doc.uploaded_by_name || 'Tú'} subió un documento: <strong>{doc.file_name}</strong>
+                          </p>
+                          <span>{formatActivityTime(doc.created_at)}</span>
+                        </div>
+                      </li>
+                    );
+                  }) : null}
+
+                  {clientProject && (
+                    <li className="activity-item">
+                      <div className="activity-dot gold"></div>
+                      <div className="activity-text">
+                        <p style={{ margin: 0, fontWeight: 500 }}>Proyecto Iniciado Oficialmente: <strong>{clientProject.title}</strong></p>
+                        <span>{formatActivityTime(clientProject.created_at)}</span>
+                      </div>
+                    </li>
+                  )}
                 </ul>
               </div>
+
+              {/* MODAL SOLICITAR REUNIÓN */}
+              {isMeetingModalOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                  <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', padding: '2rem', background: 'var(--color-bg-overlay)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                      <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--color-text-main)', fontWeight: 600 }}>Solicitar Reunión</h3>
+                      <button onClick={() => setIsMeetingModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={24} /></button>
+                    </div>
+
+                    <form onSubmit={handleRequestMeeting} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-main)', fontWeight: 500 }}>Título de la reunión</label>
+                        <input 
+                          type="text" 
+                          required 
+                          value={meetingTitle} 
+                          onChange={e => setMeetingTitle(e.target.value)} 
+                          style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none' }} 
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-main)', fontWeight: 500 }}>Fecha</label>
+                          <input 
+                            type="date" 
+                            required 
+                            min={getMinDate()}
+                            value={meetingDateOnly} 
+                            onChange={e => setMeetingDateOnly(e.target.value)} 
+                            style={{ 
+                              width: '100%', 
+                              padding: '0.85rem 1rem', 
+                              borderRadius: '10px', 
+                              border: '1px solid var(--color-border)', 
+                              background: 'var(--color-bg-card-inner)', 
+                              color: 'var(--color-text-main)', 
+                              outline: 'none',
+                              fontSize: '0.95rem',
+                              boxShadow: 'var(--inner-shadow)',
+                              transition: 'border-color 0.2s',
+                              cursor: 'pointer'
+                            }} 
+                          />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-main)', fontWeight: 500 }}>Hora</label>
+                          <input 
+                            type="time" 
+                            required 
+                            value={meetingTimeOnly} 
+                            onChange={e => setMeetingTimeOnly(e.target.value)} 
+                            style={{ 
+                              width: '100%', 
+                              padding: '0.85rem 1rem', 
+                              borderRadius: '10px', 
+                              border: '1px solid var(--color-border)', 
+                              background: 'var(--color-bg-card-inner)', 
+                              color: 'var(--color-text-main)', 
+                              outline: 'none',
+                              fontSize: '0.95rem',
+                              boxShadow: 'var(--inner-shadow)',
+                              transition: 'border-color 0.2s',
+                              cursor: 'pointer'
+                            }} 
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-main)', fontWeight: 500 }}>Duración Estimada</label>
+                        <select 
+                          value={meetingDuration} 
+                          onChange={e => setMeetingDuration(e.target.value)} 
+                          style={{ width: '100%', padding: '0.85rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg-card-inner)', color: 'var(--color-text-main)', outline: 'none' }}
+                        >
+                          <option value="15">15 minutos</option>
+                          <option value="30">30 minutos</option>
+                          <option value="45">45 minutos</option>
+                          <option value="60">1 hora</option>
+                          <option value="90">1.5 horas</option>
+                          <option value="120">2 horas</option>
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                        <button type="button" onClick={() => setIsMeetingModalOpen(false)} className="btn-secondary" style={{ padding: '0.75rem 1.5rem' }}>Cancelar</button>
+                        <button type="submit" className="btn-primary" disabled={isSubmittingMeeting} style={{ padding: '0.75rem 1.5rem' }}>
+                          {isSubmittingMeeting ? 'Solicitando...' : 'Enviar Solicitud'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
@@ -367,26 +1085,41 @@ export default function Dashboard() {
             <div className="card glass-panel col-span-2">
               <h3 style={{marginBottom: '1.5rem', color: 'var(--color-text-main)', fontSize: '1.25rem'}}>Actividad Reciente</h3>
               <ul className="activity-list">
-                <li className="activity-item" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--color-border)' }}>
-                  <div className="activity-dot blue"></div>
-                  <div className="activity-text">
-                    <p style={{ margin: 0, fontWeight: 500 }}>Iniciaste sesión de forma segura.</p>
-                    <span>Hace un momento</span>
-                  </div>
-                </li>
-                <li className="activity-item">
-                  <div className="activity-dot green"></div>
-                  <div className="activity-text">
-                    <p style={{ margin: 0, fontWeight: 500 }}>Nuevo lead recibido: "Logística SA"</p>
-                    <span>Hace 2 horas</span>
-                  </div>
-                </li>
+                {stats.recentActivity && stats.recentActivity.length > 0 ? (
+                  stats.recentActivity.map((act, index) => {
+                    let dotColor = 'blue';
+                    if (act.type === 'lead') dotColor = 'green';
+                    if (act.type === 'project') dotColor = 'gold';
+                    
+                    return (
+                      <li 
+                        key={index} 
+                        className="activity-item" 
+                        style={{ 
+                          paddingBottom: '1rem', 
+                          borderBottom: index < stats.recentActivity.length - 1 ? '1px solid var(--color-border)' : 'none' 
+                        }}
+                      >
+                        <div className={`activity-dot ${dotColor}`}></div>
+                        <div className="activity-text">
+                          <p style={{ margin: 0, fontWeight: 500 }}>{act.description}</p>
+                          <span>{formatActivityTime(act.date)}</span>
+                        </div>
+                      </li>
+                    );
+                  })
+                ) : (
+                  <li className="activity-item">
+                    <div className="activity-dot blue"></div>
+                    <div className="activity-text">
+                      <p style={{ margin: 0, fontWeight: 500 }}>No hay actividad registrada aún.</p>
+                    </div>
+                  </li>
+                )}
               </ul>
             </div>
           )}
 
         </div>
-      </main>
-    </div>
   );
 }

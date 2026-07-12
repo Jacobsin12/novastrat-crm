@@ -25,24 +25,46 @@ function initDB() {
         password TEXT NOT NULL,
         role TEXT CHECK(role IN ('admin', 'consultant', 'client')) NOT NULL,
         is_active INTEGER DEFAULT 1,
+        must_change_password INTEGER DEFAULT 0,
+        phone TEXT,
+        company_name TEXT,
+        description TEXT,
+        drive_folder_id TEXT,
+        two_factor_secret TEXT,
+        two_factor_enabled INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
-    `);
+    `, () => {
+      // Migración segura: agregar columnas si no existen
+      db.run(`ALTER TABLE users ADD COLUMN phone TEXT`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN company_name TEXT`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN description TEXT`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN drive_folder_id TEXT`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN must_change_password INTEGER DEFAULT 0`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN two_factor_secret TEXT`, (err) => {});
+      db.run(`ALTER TABLE users ADD COLUMN two_factor_enabled INTEGER DEFAULT 0`, (err) => {});
+    });
 
     // 2. Tabla de Leads (Prospectos que llegan de la Landing Page o Manual)
     db.run(`
       CREATE TABLE IF NOT EXISTS leads (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         company_name TEXT NOT NULL,
+        contact_name TEXT,
         contact_email TEXT NOT NULL,
         contact_phone TEXT,
         diagnosis_score INTEGER,
+        description TEXT,
         status TEXT DEFAULT 'new', 
         is_active INTEGER DEFAULT 1,
         lost_reason TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
-    `);
+    `, () => {
+      // Migración segura: agregar columnas si no existen
+      db.run(`ALTER TABLE leads ADD COLUMN description TEXT`, (err) => {});
+      db.run(`ALTER TABLE leads ADD COLUMN contact_name TEXT`, (err) => {});
+    });
 
     // 3. Tabla de Pipelines (Proyectos de clientes vinculados a un consultor)
     db.run(`
@@ -65,16 +87,74 @@ function initDB() {
       CREATE TABLE IF NOT EXISTS documents (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         project_id INTEGER,
+        client_id INTEGER,
         uploaded_by INTEGER,
         file_name TEXT NOT NULL,
         file_path TEXT NOT NULL,
+        drive_file_id TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (project_id) REFERENCES projects (id),
+        FOREIGN KEY (client_id) REFERENCES users (id),
         FOREIGN KEY (uploaded_by) REFERENCES users (id)
+      )
+    `, () => {
+      // Migración segura: agregar columnas si no existen
+      db.run(`ALTER TABLE documents ADD COLUMN drive_file_id TEXT`, (err) => {});
+    });
+
+    // 5. Tabla de Suscripciones Push (Para notificaciones web push)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        endpoint TEXT UNIQUE NOT NULL,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
       )
     `);
 
-    // 5. Seeder: Insertar un Admin por defecto si no hay usuarios
+    // 5c. Tabla de Asesores del Proyecto (Asignación Múltiple)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS project_consultants (
+        project_id INTEGER,
+        consultant_id INTEGER,
+        PRIMARY KEY (project_id, consultant_id),
+        FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE,
+        FOREIGN KEY (consultant_id) REFERENCES users (id) ON DELETE CASCADE
+      )
+    `);
+
+    // 5b. Tabla de Reuniones (Google Meet simulado)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS meetings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        date_time DATETIME NOT NULL,
+        status TEXT CHECK(status IN ('pending', 'accepted', 'rejected', 'proposed')) DEFAULT 'pending',
+        proposed_date_time DATETIME,
+        meet_link TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES users (id)
+      )
+    `, () => {
+      db.run(`ALTER TABLE meetings ADD COLUMN duration_minutes INTEGER DEFAULT 60`, (err) => {});
+    });
+
+    // 5d. Tabla para persistir el estado de notificaciones leídas/borradas por usuario
+    db.run(`
+      CREATE TABLE IF NOT EXISTS user_notifications_state (
+        user_id INTEGER,
+        notification_id TEXT,
+        is_read INTEGER DEFAULT 0,
+        is_deleted INTEGER DEFAULT 0,
+        PRIMARY KEY (user_id, notification_id)
+      )
+    `);
+
+    // 6. Seeder: Insertar un Admin por defecto si no hay usuarios
     db.get('SELECT COUNT(*) as count FROM users', (err, row) => {
       if (row.count === 0) {
         // En producción usar bcrypt, aquí para testing inicial usamos texto plano

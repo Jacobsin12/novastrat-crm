@@ -1,11 +1,15 @@
 /* ─── TEAM (liquid glass cards) ─── */
 .team-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
 }
 
 .team-card {
+  flex: 1 1 calc(25% - 1.5rem);
+  min-width: 220px;
+  max-width: 280px;
   position: relative;
   text-align: center;
   background: rgba(255, 255, 255, 0.5);
@@ -21,15 +25,15 @@
   cursor: pointer;
 }
 
-/* Efecto focus en el grid: si paso el mouse por la cuadrícula, desenfoco todas las tarjetas */
-.team-grid:hover .team-card {
+/* Efecto focus: si paso el mouse por una tarjeta, desenfoco las demás */
+.team-grid:has(.team-card:hover) .team-card:not(:hover) {
   filter: blur(4px);
   opacity: 0.6;
   transform: scale(0.96);
 }
 
 /* Efecto focus en la tarjeta específica: la que estoy tocando la agrando y la enfoco */
-.team-grid .team-card:hover {
+.team-card:hover {
   filter: blur(0);
   opacity: 1;
   transform: scale(1.08) translateY(-10px);
@@ -72,14 +76,16 @@
 }
 
 @media (max-width: 768px) {
-  .team-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .team-card {
+    flex: 1 1 calc(50% - 1.5rem);
+    max-width: 320px;
   }
 }
 
 @media (max-width: 480px) {
-  .team-grid {
-    grid-template-columns: 1fr;
+  .team-card {
+    flex: 1 1 100%;
+    max-width: 100%;
   }
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileSearch, Target, TrendingUp, Building, CheckCircle, Globe, Users, Anchor, BarChart2, ShieldCheck } from 'lucide-react';
+import { FileSearch, Target, TrendingUp, Building, CheckCircle, Globe, Users, Anchor, BarChart2, ShieldCheck, Code } from 'lucide-react';
 import useInView from '../hooks/useInView';
 import '../styles/Servicios.css';
 
@@ -14,6 +14,7 @@ const servicesList = [
   { icon: Anchor, title: 'Consultoría Aduanal', desc: 'Importación, exportación y cumplimiento de regulaciones.' },
   { icon: BarChart2, title: 'Estrategia Financiera', desc: 'Diversificación de capital y gestión de oportunidades.' },
   { icon: ShieldCheck, title: 'Consultoría Patrimonial', desc: 'Blindaje patrimonial para familias y empresas.' },
+  { icon: Code, title: 'Soluciones Tecnológicas', desc: 'Desarrollo e implementación de software a medida, aplicaciones y herramientas digitales para optimizar la operatividad de tu empresa.' },
 ];
 
 export function Servicios() {

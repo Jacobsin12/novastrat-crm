@@ -52,7 +52,7 @@
 
 .diag-close-btn {
   position: absolute;
-  top: 1.25rem;
+  top: 0.75rem;
   right: 1.25rem;
   background: rgba(0,0,0,0.05);
   border: none;
@@ -69,8 +69,8 @@
 }
 
 .diag-close-btn:hover {
-  background: rgba(0,0,0,0.1);
-  color: var(--color-black);
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
   transform: rotate(90deg);
 }
 
@@ -88,6 +88,7 @@
   height: 4px;
   background: rgba(0,0,0,0.06);
   border-radius: 4px;
+  margin-top: 1rem;
   margin-bottom: 1.5rem;
   overflow: hidden;
 }

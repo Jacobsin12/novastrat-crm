@@ -1,0 +1,41 @@
+/* Styles specific to the Vault page */
+
+/* Admin two-panel layout */
+.vault-admin-layout {
+  display: flex;
+  gap: 1.5rem;
+  min-height: 60vh;
+}
+
+.vault-admin-folders {
+  width: 340px;
+  min-width: 280px;
+  flex-shrink: 0;
+}
+
+.vault-admin-files {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Mobile: stack panels, show/hide based on selection */
+@media (max-width: 768px) {
+  .vault-admin-layout {
+    flex-direction: column;
+    gap: 1rem;
+    min-height: auto;
+  }
+
+  .vault-admin-folders {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .vault-admin-files {
+    width: 100%;
+  }
+
+  .vault-hide-on-mobile {
+    display: none !important;
+  }
+}

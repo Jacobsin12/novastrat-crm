@@ -4,12 +4,13 @@ import useInView from '../hooks/useInView';
 import '../styles/Equipo.css';
 
 const teamMembers = [
-  { name: 'Andrés Galán', role: 'Cofundador · Consultor Administrativo y de Calidad', img: '/team/andres.jpg' },
-  { name: 'Erika Martínez', role: 'Cofundadora · Consultora de Marketing', img: '/team/erika.jpg' },
-  { name: 'Marco Muñoz', role: 'Consultor Senior', img: '/team/marco.jpg' },
-  { name: 'Aarón Martínez', role: 'Consultor Financiero', img: '/team/aaron.jpg' },
-  { name: 'Damián Hernández', role: 'Consultor Aduanal', img: '/team/damian.jpg' },
-  { name: 'Diego Olvera', role: 'Consultor de Capital Humano', img: '/team/diego.jpg' },
+  { name: 'Andrés Galán', role: 'Cofundador · Consultor Administrativo y de Calidad', img: '/team/andres.jpg', bio: 'Experto en procesos administrativos y sistemas de gestión de calidad. Lidera la visión estratégica y la optimización operativa de las empresas para garantizar su escalabilidad.' },
+  { name: 'Erika Martínez', role: 'Cofundadora · Consultora de Marketing', img: '/team/erika.jpg', bio: 'Especialista en desarrollo de marca y estrategias de marketing digital. Ayuda a los clientes a conectar con su audiencia y escalar sus ventas de forma efectiva.' },
+  { name: 'Marco Muñoz', role: 'Consultor Senior', img: '/team/marco.jpg', bio: 'Consultor experimentado en transformación de negocios. Aporta soluciones integrales para resolver desafíos complejos y asegurar resultados tangibles.' },
+  { name: 'Aarón Martínez', role: 'Consultor Financiero', img: '/team/aaron.jpg', bio: 'Analista experto en rentabilidad y estrategias de inversión. Su enfoque está en maximizar el capital y orientar hacia decisiones financieras seguras y rentables.' },
+  { name: 'Damián Hernández', role: 'Consultor Aduanal', img: '/team/damian.jpg', bio: 'Especialista en comercio exterior y normativas aduaneras. Facilita los procesos de importación y exportación, asegurando el cumplimiento legal y logístico.' },
+  { name: 'Diego Olvera', role: 'Consultor de Capital Humano', img: '/team/diego.jpg', bio: 'Apasionado por el desarrollo organizacional. Diseña estrategias para la capacitación, integración y retención del talento, fortaleciendo la cultura de cada empresa.' },
+  { name: 'Jacob Valencia', role: 'Software Developer', img: '/team/jacob.jpg', bio: 'Desarrollador de software especializado en la creación de aplicaciones web, móviles y arquitectura de bases de datos. Aporta soluciones tecnológicas integrales (frontend y backend) que potencian la operatividad de las empresas.' },
 ];
 
 export function Equipo() {
@@ -109,7 +110,7 @@ export function Equipo() {
               <h3 className="team-modal-name">{selectedMember.name}</h3>
               <p className="team-modal-role">{selectedMember.role}</p>
               <p className="team-modal-bio">
-                Profesional especializado de NovaStrat. Comprometido con la excelencia y la entrega de soluciones estratégicas personalizadas para impulsar el crecimiento, la eficiencia y el éxito sostenible de tu empresa.
+                {selectedMember.bio}
               </p>
             </div>
           </div>
