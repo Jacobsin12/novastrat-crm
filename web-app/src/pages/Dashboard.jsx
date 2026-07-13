@@ -327,7 +327,7 @@ export default function Dashboard() {
               {/* SOLICITUDES DE REUNIÓN PARA ADMIN/ASESOR */}
               <div className="card glass-panel col-span-4" style={{ padding: '1.5rem' }}>
                 <h3 style={{ marginBottom: '1.5rem', color: 'var(--color-text-main)', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Calendar size={20} color="var(--color-accent)" /> Solicitudes de Reuniones de Clientes
+                  <Calendar size={20} color="var(--color-accent)" /> Supervisión de Reuniones
                 </h3>
 
                 {adminMeetings.length === 0 ? (
@@ -356,7 +356,7 @@ export default function Dashboard() {
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            {meet.status === 'pending' && (!meet.consultant_id || meet.consultant_id === user.id) ? (
+                            {meet.status === 'pending' && (meet.consultant_id === user.id || (user.role !== 'admin' && !meet.consultant_id)) ? (
                               <div style={{ display: 'flex', gap: '0.75rem' }}>
                                 <button 
                                   onClick={() => handleRespondMeeting(meet.id, 'accepted')} 
