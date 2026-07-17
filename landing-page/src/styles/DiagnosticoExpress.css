@@ -483,14 +483,14 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 0 0.5rem !important;
+  padding: 0 0.4rem !important;
   border-radius: 12px !important;
   border: 1px solid rgba(0,0,0,0.08) !important;
   background: rgba(255,255,255,0.5) !important;
   height: 100%;
-  flex: 0 0 80px !important; /* Force fixed width instead of auto to prevent stretch */
-  width: 80px !important;
-  max-width: 80px !important;
+  flex: 0 0 65px !important; /* Force fixed width instead of auto to prevent stretch */
+  width: 65px !important;
+  max-width: 65px !important;
 }
 .PhoneInputCountrySelect {
   display: none !important; /* Hide the native select completely */
